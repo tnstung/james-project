@@ -21,13 +21,13 @@ else
     ORIGINAL_BRANCH=master
 fi
 
-APACHE_REPO=`git remote show | grep apache || true`
-if [ -z "$APACHE_REPO" ]; then
-    git remote add apache https://github.com/apache/james-project.git
+LINAGORA_REPO=`git remote show | grep linagora || true`
+if [ -z "$LINAGORA_REPO" ]; then
+    git remote add linagora https://github.com/linagora/james-project.git
 fi 
-# Getting original branch from apache repo
-git fetch apache
-git checkout apache/$ORIGINAL_BRANCH -B $ORIGINAL_BRANCH
+# Getting original branch from linagora repo
+git fetch linagora
+git checkout linagora/$ORIGINAL_BRANCH -B $ORIGINAL_BRANCH
 
 # Getting the branch to be merged from /origin
 git fetch origin
