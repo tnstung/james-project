@@ -108,7 +108,6 @@ class RabbitMQMailQueueConfigurationChangeTest {
     private RabbitMQMailQueue getRabbitMQMailQueue(CassandraCluster cassandra, CassandraMailQueueViewConfiguration mailQueueViewConfiguration) throws Exception {
         CassandraMailQueueView.Factory mailQueueViewFactory = CassandraMailQueueViewTestFactory.factory(clock,
             cassandra.getConf(),
-            cassandra.getTypesProvider(),
             mailQueueViewConfiguration,
             mimeMessageStoreFactory);
 

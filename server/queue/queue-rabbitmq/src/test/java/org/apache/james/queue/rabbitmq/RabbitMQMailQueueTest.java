@@ -105,7 +105,7 @@ public class RabbitMQMailQueueTest implements ManageableMailQueueContract, MailQ
         MimeMessageStore.Factory mimeMessageStoreFactory = MimeMessageStore.factory(blobsDAO);
         clock = new UpdatableTickingClock(IN_SLICE_1);
 
-        MailQueueView.Factory mailQueueViewFactory = CassandraMailQueueViewTestFactory.factory(clock, cassandra.getConf(), cassandra.getTypesProvider(),
+        MailQueueView.Factory mailQueueViewFactory = CassandraMailQueueViewTestFactory.factory(clock, cassandra.getConf(),
             CassandraMailQueueViewConfiguration.builder()
                     .bucketCount(THREE_BUCKET_COUNT)
                     .updateBrowseStartPace(UPDATE_BROWSE_START_PACE)
@@ -230,14 +230,6 @@ public class RabbitMQMailQueueTest implements ManageableMailQueueContract, MailQ
     public void concurrentEnqueueDequeueShouldNotFail() {
 
     }
-
-    @Disabled("JAMES-2733 Deleted elements are still dequeued")
-    @Test
-    @Override
-    public void deletedElementsShouldNotBeDequeued() {
-
-    }
-
 
     private void enqueueSomeMails(Function<Integer, String> namePattern, int emailCount) {
         IntStream.rangeClosed(1, emailCount)

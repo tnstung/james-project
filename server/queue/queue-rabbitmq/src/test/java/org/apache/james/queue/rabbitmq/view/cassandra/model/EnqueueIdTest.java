@@ -19,15 +19,43 @@
 
 package org.apache.james.queue.rabbitmq.view.cassandra.model;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.util.UUID;
+
+import org.apache.james.queue.rabbitmq.EnqueueId;
 import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-class MailKeyTest {
+class EnqueueIdTest {
+    private static final UUID UUID_1 = UUID.fromString("110e8400-e29b-11d4-a716-446655440000");
 
     @Test
     void shouldMatchBeanContract() {
-        EqualsVerifier.forClass(MailKey.class)
+        EqualsVerifier.forClass(EnqueueId.class)
             .verify();
+    }
+
+    @Test
+    void ofSerializedShouldDeserializeTheGivenEnqueueId() {
+        assertThat(EnqueueId.ofSerialized(UUID_1.toString()))
+            .isEqualTo(EnqueueId.of(UUID_1));
+    }
+
+    @Test
+    void serializeShouldReturnAStringRepresentation() {
+        EnqueueId enqueueId = EnqueueId.of(UUID_1);
+
+        assertThat(enqueueId.serialize())
+            .isEqualTo(UUID_1.toString());
+    }
+
+    @Test
+    void ofSerializedShouldRevertSerialize() {
+        EnqueueId enqueueId = EnqueueId.of(UUID_1);
+
+        assertThat(EnqueueId.ofSerialized(enqueueId.serialize()))
+            .isEqualTo(enqueueId);
     }
 }

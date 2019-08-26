@@ -19,6 +19,7 @@
 
 package org.apache.james.queue.rabbitmq.view.cassandra;
 
+import static com.datastax.driver.core.DataType.text;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
@@ -27,10 +28,11 @@ import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueV
 import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.EnqueuedMailsTable.BODY_BLOB_ID;
 import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.EnqueuedMailsTable.BUCKET_ID;
 import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.EnqueuedMailsTable.ENQUEUED_TIME;
+import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.EnqueuedMailsTable.ENQUEUE_ID;
 import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.EnqueuedMailsTable.ERROR_MESSAGE;
 import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.EnqueuedMailsTable.HEADER_BLOB_ID;
 import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.EnqueuedMailsTable.LAST_UPDATED;
-import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.EnqueuedMailsTable.MAIL_KEY;
+import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.EnqueuedMailsTable.NAME;
 import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.EnqueuedMailsTable.PER_RECIPIENT_SPECIFIC_HEADERS;
 import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.EnqueuedMailsTable.QUEUE_NAME;
 import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.EnqueuedMailsTable.RECIPIENTS;
@@ -41,14 +43,13 @@ import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueV
 import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.EnqueuedMailsTable.TABLE_NAME;
 import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.EnqueuedMailsTable.TIME_RANGE_START;
 import static org.apache.james.queue.rabbitmq.view.cassandra.EnqueuedMailsDaoUtil.asStringList;
-import static org.apache.james.queue.rabbitmq.view.cassandra.EnqueuedMailsDaoUtil.toHeaderMap;
 import static org.apache.james.queue.rabbitmq.view.cassandra.EnqueuedMailsDaoUtil.toRawAttributeMap;
+import static org.apache.james.queue.rabbitmq.view.cassandra.EnqueuedMailsDaoUtil.toTupleList;
 
 import java.util.Date;
 
 import javax.inject.Inject;
 
-import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.mail.MimeMessagePartsId;
@@ -61,6 +62,7 @@ import org.apache.mailet.Mail;
 
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
+import com.datastax.driver.core.TupleType;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -70,18 +72,17 @@ public class EnqueuedMailsDAO {
     private final CassandraAsyncExecutor executor;
     private final PreparedStatement selectFrom;
     private final PreparedStatement insert;
-    private final CassandraTypesProvider cassandraTypesProvider;
     private final BlobId.Factory blobFactory;
+    private final TupleType userHeaderNameHeaderValueTriple;
 
     @Inject
-    EnqueuedMailsDAO(Session session, CassandraTypesProvider cassandraTypesProvider,
-                     BlobId.Factory blobIdFactory) {
+    EnqueuedMailsDAO(Session session, BlobId.Factory blobIdFactory) {
         this.executor = new CassandraAsyncExecutor(session);
-        this.cassandraTypesProvider = cassandraTypesProvider;
 
         this.selectFrom = prepareSelectFrom(session);
         this.insert = prepareInsert(session);
         this.blobFactory = blobIdFactory;
+        this.userHeaderNameHeaderValueTriple = session.getCluster().getMetadata().newTupleType(text(), text(), text());
     }
 
     private PreparedStatement prepareSelectFrom(Session session) {
@@ -97,7 +98,8 @@ public class EnqueuedMailsDAO {
             .value(QUEUE_NAME, bindMarker(QUEUE_NAME))
             .value(TIME_RANGE_START, bindMarker(TIME_RANGE_START))
             .value(BUCKET_ID, bindMarker(BUCKET_ID))
-            .value(MAIL_KEY, bindMarker(MAIL_KEY))
+            .value(ENQUEUE_ID, bindMarker(ENQUEUE_ID))
+            .value(NAME, bindMarker(NAME))
             .value(HEADER_BLOB_ID, bindMarker(HEADER_BLOB_ID))
             .value(BODY_BLOB_ID, bindMarker(BODY_BLOB_ID))
             .value(ENQUEUED_TIME, bindMarker(ENQUEUED_TIME))
@@ -123,7 +125,8 @@ public class EnqueuedMailsDAO {
             .setTimestamp(TIME_RANGE_START, Date.from(slicingContext.getTimeRangeStart()))
             .setInt(BUCKET_ID, slicingContext.getBucketId().getValue())
             .setTimestamp(ENQUEUED_TIME, Date.from(enqueuedItem.getEnqueuedTime()))
-            .setString(MAIL_KEY, mail.getName())
+            .setUUID(ENQUEUE_ID, enqueuedItem.getEnqueueId().asUUID())
+            .setString(NAME, mail.getName())
             .setString(HEADER_BLOB_ID, mimeMessagePartsId.getHeaderBlobId().asString())
             .setString(BODY_BLOB_ID, mimeMessagePartsId.getBodyBlobId().asString())
             .setString(STATE, mail.getState())
@@ -134,7 +137,7 @@ public class EnqueuedMailsDAO {
             .setString(REMOTE_HOST, mail.getRemoteHost())
             .setTimestamp(LAST_UPDATED, mail.getLastUpdated())
             .setMap(ATTRIBUTES, toRawAttributeMap(mail))
-            .setMap(PER_RECIPIENT_SPECIFIC_HEADERS, toHeaderMap(cassandraTypesProvider, mail.getPerRecipientSpecificHeaders())));
+            .setList(PER_RECIPIENT_SPECIFIC_HEADERS, toTupleList(userHeaderNameHeaderValueTriple, mail.getPerRecipientSpecificHeaders())));
     }
 
     Flux<EnqueuedItemWithSlicingContext> selectEnqueuedMails(

@@ -17,49 +17,32 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.queue.rabbitmq.view.cassandra.model;
+package org.apache.james.queue.rabbitmq;
 
-import java.util.Objects;
-
+import org.apache.james.blob.mail.MimeMessagePartsId;
 import org.apache.mailet.Mail;
 
-import com.google.common.base.Preconditions;
+public class MailReference {
 
-public class MailKey {
+    private final EnqueueId enqueueId;
+    private final Mail mail;
+    private final MimeMessagePartsId partsId;
 
-    public static MailKey fromMail(Mail mail) {
-        return of(mail.getName());
+    public MailReference(EnqueueId enqueueId, Mail mail, MimeMessagePartsId partsId) {
+        this.enqueueId = enqueueId;
+        this.mail = mail;
+        this.partsId = partsId;
     }
 
-    public static MailKey of(String mailKey) {
-        return new MailKey(mailKey);
+    public EnqueueId getEnqueueId() {
+        return enqueueId;
     }
 
-    private final String mailKey;
-
-    private MailKey(String mailKey) {
-        Preconditions.checkNotNull(mailKey);
-        Preconditions.checkArgument(!mailKey.isEmpty());
-
-        this.mailKey = mailKey;
+    public Mail getMail() {
+        return mail;
     }
 
-    public String getMailKey() {
-        return mailKey;
-    }
-
-    @Override
-    public final boolean equals(Object o) {
-        if (o instanceof MailKey) {
-            MailKey mailKey1 = (MailKey) o;
-
-            return Objects.equals(this.mailKey, mailKey1.mailKey);
-        }
-        return false;
-    }
-
-    @Override
-    public final int hashCode() {
-        return Objects.hash(mailKey);
+    public MimeMessagePartsId getPartsId() {
+        return partsId;
     }
 }

@@ -17,30 +17,55 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.queue.rabbitmq.view.api;
+package org.apache.james.queue.rabbitmq;
 
-import org.apache.james.queue.api.ManageableMailQueue;
-import org.apache.james.queue.rabbitmq.EnqueueId;
-import org.apache.james.queue.rabbitmq.EnqueuedItem;
-import org.apache.james.queue.rabbitmq.MailQueueName;
+import java.util.Objects;
+import java.util.UUID;
 
-import reactor.core.publisher.Mono;
+import com.google.common.base.Preconditions;
 
-public interface MailQueueView {
+public class EnqueueId {
 
-    interface Factory {
-        MailQueueView create(MailQueueName mailQueueName);
+    public static EnqueueId generate() {
+        return of(UUID.randomUUID());
     }
 
-    void initialize(MailQueueName mailQueueName);
+    public static EnqueueId of(UUID uuid) {
+        Preconditions.checkNotNull(uuid);
+        return new EnqueueId(uuid);
+    }
 
-    Mono<Void> storeMail(EnqueuedItem enqueuedItem);
+    public static EnqueueId ofSerialized(String serialized) {
+        Preconditions.checkNotNull(serialized);
+        return of(UUID.fromString(serialized));
+    }
 
-    long delete(DeleteCondition deleteCondition);
+    private final UUID id;
 
-    Mono<Boolean> isPresent(EnqueueId id);
+    private EnqueueId(UUID id) {
+        this.id = id;
+    }
 
-    ManageableMailQueue.MailQueueIterator browse();
+    public UUID asUUID() {
+        return id;
+    }
 
-    long getSize();
+    public String serialize() {
+        return id.toString();
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof EnqueueId) {
+            EnqueueId enqueueId = (EnqueueId) o;
+
+            return Objects.equals(this.id, enqueueId.id);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(id);
+    }
 }

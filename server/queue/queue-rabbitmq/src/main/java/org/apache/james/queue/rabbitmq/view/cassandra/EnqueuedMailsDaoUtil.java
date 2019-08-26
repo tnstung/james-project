@@ -23,13 +23,11 @@ import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueV
 import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.EnqueuedMailsTable.BODY_BLOB_ID;
 import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.EnqueuedMailsTable.BUCKET_ID;
 import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.EnqueuedMailsTable.ENQUEUED_TIME;
+import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.EnqueuedMailsTable.ENQUEUE_ID;
 import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.EnqueuedMailsTable.ERROR_MESSAGE;
 import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.EnqueuedMailsTable.HEADER_BLOB_ID;
-import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.EnqueuedMailsTable.HEADER_NAME;
-import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.EnqueuedMailsTable.HEADER_TYPE;
-import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.EnqueuedMailsTable.HEADER_VALUE;
 import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.EnqueuedMailsTable.LAST_UPDATED;
-import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.EnqueuedMailsTable.MAIL_KEY;
+import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.EnqueuedMailsTable.NAME;
 import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.EnqueuedMailsTable.PER_RECIPIENT_SPECIFIC_HEADERS;
 import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.EnqueuedMailsTable.QUEUE_NAME;
 import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.EnqueuedMailsTable.RECIPIENTS;
@@ -38,6 +36,9 @@ import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueV
 import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.EnqueuedMailsTable.SENDER;
 import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.EnqueuedMailsTable.STATE;
 import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.EnqueuedMailsTable.TIME_RANGE_START;
+import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.HeaderEntry.HEADER_NAME_INDEX;
+import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.HeaderEntry.HEADER_VALUE_INDEX;
+import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.HeaderEntry.USER_INDEX;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -53,10 +54,10 @@ import java.util.Optional;
 import javax.mail.internet.AddressException;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.mail.MimeMessagePartsId;
 import org.apache.james.core.MailAddress;
+import org.apache.james.queue.rabbitmq.EnqueueId;
 import org.apache.james.queue.rabbitmq.EnqueuedItem;
 import org.apache.james.queue.rabbitmq.MailQueueName;
 import org.apache.james.queue.rabbitmq.view.cassandra.model.BucketedSlices;
@@ -69,8 +70,10 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.PerRecipientHeaders;
 
 import com.datastax.driver.core.Row;
-import com.datastax.driver.core.UDTValue;
+import com.datastax.driver.core.TupleType;
+import com.datastax.driver.core.TupleValue;
 import com.github.fge.lambdas.Throwing;
+import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -79,6 +82,7 @@ public class EnqueuedMailsDaoUtil {
 
     static EnqueuedItemWithSlicingContext toEnqueuedMail(Row row, BlobId.Factory blobFactory) {
         MailQueueName queueName = MailQueueName.fromString(row.getString(QUEUE_NAME));
+        EnqueueId enqueueId = EnqueueId.of(row.getUUID(ENQUEUE_ID));
         Instant timeRangeStart = row.getTimestamp(TIME_RANGE_START).toInstant();
         BucketedSlices.BucketId bucketId = BucketedSlices.BucketId.of(row.getInt(BUCKET_ID));
         Instant enqueuedTime = row.getTimestamp(ENQUEUED_TIME).toInstant();
@@ -101,10 +105,10 @@ public class EnqueuedMailsDaoUtil {
         String remoteAddr = row.getString(REMOTE_ADDR);
         String remoteHost = row.getString(REMOTE_HOST);
         String errorMessage = row.getString(ERROR_MESSAGE);
-        String name = row.getString(MAIL_KEY);
+        String name = row.getString(NAME);
         Date lastUpdated = row.getTimestamp(LAST_UPDATED);
         Map<String, ByteBuffer> rawAttributes = row.getMap(ATTRIBUTES, String.class, ByteBuffer.class);
-        PerRecipientHeaders perRecipientHeaders = fromHeaderMap(row.getMap(PER_RECIPIENT_SPECIFIC_HEADERS, String.class, UDTValue.class));
+        PerRecipientHeaders perRecipientHeaders = fromList(row.getList(PER_RECIPIENT_SPECIFIC_HEADERS, TupleValue.class));
 
         MailImpl mail = MailImpl.builder()
             .name(name)
@@ -119,6 +123,7 @@ public class EnqueuedMailsDaoUtil {
             .addAttributes(toAttributes(rawAttributes))
             .build();
         EnqueuedItem enqueuedItem = EnqueuedItem.builder()
+            .enqueueId(enqueueId)
             .mailQueueName(queueName)
             .mail(mail)
             .enqueuedTime(enqueuedTime)
@@ -148,14 +153,16 @@ public class EnqueuedMailsDaoUtil {
         }
     }
 
-    private static PerRecipientHeaders fromHeaderMap(Map<String, UDTValue> rawMap) {
+    private static PerRecipientHeaders fromList(List<TupleValue> list) {
         PerRecipientHeaders result = new PerRecipientHeaders();
 
-        rawMap.forEach((key, value) -> result.addHeaderForRecipient(PerRecipientHeaders.Header.builder()
-                .name(value.getString(HEADER_NAME))
-                .value(value.getString(HEADER_VALUE))
-                .build(),
-            toMailAddress(key)));
+        list.forEach(tuple ->
+            result.addHeaderForRecipient(
+                PerRecipientHeaders.Header.builder()
+                    .name(tuple.getString(HEADER_NAME_INDEX))
+                    .value(tuple.getString(HEADER_VALUE_INDEX))
+                    .build(),
+                toMailAddress(tuple.getString(USER_INDEX))));
         return result;
     }
 
@@ -183,18 +190,11 @@ public class EnqueuedMailsDaoUtil {
         return ByteBuffer.wrap(attributeValue.toJson().toString().getBytes(StandardCharsets.UTF_8));
     }
 
-    static ImmutableMap<String, UDTValue> toHeaderMap(CassandraTypesProvider cassandraTypesProvider,
-                                                      PerRecipientHeaders perRecipientHeaders) {
+    static ImmutableList<TupleValue> toTupleList(TupleType userHeaderNameHeaderValueTriple, PerRecipientHeaders perRecipientHeaders) {
         return perRecipientHeaders.getHeadersByRecipient()
-            .asMap()
-            .entrySet()
+            .entries()
             .stream()
-            .flatMap(entry -> entry.getValue().stream().map(value -> Pair.of(entry.getKey(), value)))
-            .map(entry -> Pair.of(entry.getKey().asString(),
-                cassandraTypesProvider.getDefinedUserType(HEADER_TYPE)
-                    .newValue()
-                    .setString(HEADER_NAME, entry.getRight().getName())
-                    .setString(HEADER_VALUE, entry.getRight().getValue())))
-            .collect(ImmutableMap.toImmutableMap(Pair::getLeft, Pair::getRight));
+            .map(entry -> userHeaderNameHeaderValueTriple.newValue(entry.getKey().asString(), entry.getValue().getName(), entry.getValue().getValue()))
+            .collect(Guavate.toImmutableList());
     }
 }

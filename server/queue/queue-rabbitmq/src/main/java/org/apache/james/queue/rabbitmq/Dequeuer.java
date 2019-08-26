@@ -34,6 +34,7 @@ import org.apache.mailet.Mail;
 
 import com.github.fge.lambdas.consumers.ThrowingConsumer;
 import com.rabbitmq.client.Delivery;
+
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.rabbitmq.AcknowledgableDelivery;
@@ -45,16 +46,22 @@ class Dequeuer {
 
     private static class RabbitMQMailQueueItem implements MailQueue.MailQueueItem {
         private final Consumer<Boolean> ack;
+        private final EnqueueId enqueueId;
         private final Mail mail;
 
-        private RabbitMQMailQueueItem(Consumer<Boolean> ack, Mail mail) {
+        private RabbitMQMailQueueItem(Consumer<Boolean> ack, MailWithEnqueueId mailWithEnqueueId) {
             this.ack = ack;
-            this.mail = mail;
+            this.enqueueId = mailWithEnqueueId.getEnqueueId();
+            this.mail = mailWithEnqueueId.getMail();
         }
 
         @Override
         public Mail getMail() {
             return mail;
+        }
+
+        public EnqueueId getEnqueueId() {
+            return enqueueId;
         }
 
         @Override
@@ -63,12 +70,12 @@ class Dequeuer {
         }
     }
 
-    private final Function<MailReferenceDTO, Mail> mailLoader;
+    private final Function<MailReferenceDTO, MailWithEnqueueId> mailLoader;
     private final Metric dequeueMetric;
     private final MailReferenceSerializer mailReferenceSerializer;
     private final MailQueueView mailQueueView;
 
-    Dequeuer(MailQueueName name, RabbitClient rabbitClient, Function<MailReferenceDTO, Mail> mailLoader,
+    Dequeuer(MailQueueName name, RabbitClient rabbitClient, Function<MailReferenceDTO, MailWithEnqueueId> mailLoader,
              MailReferenceSerializer serializer, MetricFactory metricFactory,
              MailQueueView mailQueueView) {
         this.mailLoader = mailLoader;
@@ -80,33 +87,47 @@ class Dequeuer {
             .filter(getResponse -> getResponse.getBody() != null);
     }
 
-    Flux<MailQueue.MailQueueItem> deQueue() {
-        return flux.flatMap(this::loadItem);
+    Flux<? extends MailQueue.MailQueueItem> deQueue() {
+        return flux.concatMap(this::loadItem)
+            .concatMap(this::filterIfDeleted);
+    }
+
+    private Mono<RabbitMQMailQueueItem> filterIfDeleted(RabbitMQMailQueueItem item) {
+        return mailQueueView.isPresent(item.getEnqueueId())
+            .flatMap(isPresent -> keepWhenPresent(item, isPresent));
+    }
+
+    private Mono<? extends RabbitMQMailQueueItem> keepWhenPresent(RabbitMQMailQueueItem item, Boolean isPresent) {
+        if (isPresent) {
+            return Mono.just(item);
+        }
+        item.done(true);
+        return Mono.empty();
     }
 
     private Mono<RabbitMQMailQueueItem> loadItem(AcknowledgableDelivery response) {
         try {
-            Mail mail = loadMail(response);
-            ThrowingConsumer<Boolean> ack = ack(response, response.getEnvelope().getDeliveryTag(), mail);
-            return Mono.just(new RabbitMQMailQueueItem(ack, mail));
+            MailWithEnqueueId mailWithEnqueueId = loadMail(response);
+            ThrowingConsumer<Boolean> ack = ack(response, mailWithEnqueueId);
+            return Mono.just(new RabbitMQMailQueueItem(ack, mailWithEnqueueId));
         } catch (MailQueue.MailQueueException e) {
             return Mono.error(e);
         }
     }
 
-    private ThrowingConsumer<Boolean> ack(AcknowledgableDelivery response, long deliveryTag, Mail mail) {
+    private ThrowingConsumer<Boolean> ack(AcknowledgableDelivery response, MailWithEnqueueId mailWithEnqueueId) {
         return success -> {
             if (success) {
                 dequeueMetric.increment();
                 response.ack();
-                mailQueueView.delete(DeleteCondition.withName(mail.getName()));
+                mailQueueView.delete(DeleteCondition.withEnqueueId(mailWithEnqueueId.getEnqueueId()));
             } else {
                 response.nack(REQUEUE);
             }
         };
     }
 
-    private Mail loadMail(Delivery response) throws MailQueue.MailQueueException {
+    private MailWithEnqueueId loadMail(Delivery response) throws MailQueue.MailQueueException {
         MailReferenceDTO mailDTO = toMailReference(response);
         return mailLoader.apply(mailDTO);
     }

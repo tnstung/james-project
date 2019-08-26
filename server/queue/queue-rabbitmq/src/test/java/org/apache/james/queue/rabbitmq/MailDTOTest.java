@@ -46,6 +46,7 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 class MailDTOTest {
+    static final EnqueueId EN_QUEUE_ID = EnqueueId.ofSerialized("110e8400-e29b-11d4-a716-446655440000");
     static final HashBlobId.Factory BLOB_ID_FACTORY = new HashBlobId.Factory();
     static final Date LAST_UPDATED = Date.from(Instant.parse("2016-09-08T14:25:52.000Z"));
 
@@ -84,7 +85,9 @@ class MailDTOTest {
     }
 
     private MailReferenceDTO mailDTO1() throws MessagingException {
-        return MailReferenceDTO.fromMail(
+        return MailReferenceDTO.fromMailReference(
+            new MailReference(
+            EN_QUEUE_ID,
             FakeMail.builder()
                 .name("mail-name-558")
                 .recipients(MailAddressFixture.RECIPIENT1, MailAddressFixture.RECIPIENT2)
@@ -107,20 +110,22 @@ class MailDTOTest {
             MimeMessagePartsId.builder()
                 .headerBlobId(BLOB_ID_FACTORY.from("210e7136-ede3-44eb-9495-3ed816d6e23b"))
                 .bodyBlobId(BLOB_ID_FACTORY.from("ef46c026-7819-4048-b562-3a37469191ed"))
-                .build());
+                .build()));
     }
 
-    private MailReferenceDTO mailDTOMin() throws MessagingException {
+    private MailReferenceDTO mailDTOMin() {
         MailImpl mail = MailImpl.builder()
             .name("mail-name-558")
             .build();
         mail.setState(null);
         mail.setLastUpdated(null);
-        return MailReferenceDTO.fromMail(
-            mail,
-            MimeMessagePartsId.builder()
-                .headerBlobId(BLOB_ID_FACTORY.from("210e7136-ede3-44eb-9495-3ed816d6e23b"))
-                .bodyBlobId(BLOB_ID_FACTORY.from("ef46c026-7819-4048-b562-3a37469191ed"))
-                .build());
+        return MailReferenceDTO.fromMailReference(
+            new MailReference(
+                EN_QUEUE_ID,
+                mail,
+                MimeMessagePartsId.builder()
+                    .headerBlobId(BLOB_ID_FACTORY.from("210e7136-ede3-44eb-9495-3ed816d6e23b"))
+                    .bodyBlobId(BLOB_ID_FACTORY.from("ef46c026-7819-4048-b562-3a37469191ed"))
+                    .build()));
     }
 }

@@ -24,12 +24,12 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import javax.inject.Inject;
 
+import org.apache.james.queue.rabbitmq.EnqueueId;
 import org.apache.james.queue.rabbitmq.MailQueueName;
 import org.apache.james.queue.rabbitmq.view.cassandra.configuration.CassandraMailQueueViewConfiguration;
-import org.apache.james.queue.rabbitmq.view.cassandra.model.MailKey;
-import org.apache.mailet.Mail;
 
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 public class CassandraMailQueueMailDelete {
 
@@ -49,24 +49,21 @@ public class CassandraMailQueueMailDelete {
         this.configuration = configuration;
     }
 
-    Mono<Void> considerDeleted(Mail mail, MailQueueName mailQueueName) {
-        return considerDeleted(MailKey.fromMail(mail), mailQueueName);
-    }
-
-    Mono<Void> considerDeleted(MailKey mailKey, MailQueueName mailQueueName) {
+    Mono<Void> considerDeleted(EnqueueId enqueueId, MailQueueName mailQueueName) {
         return deletedMailsDao
-            .markAsDeleted(mailQueueName, mailKey)
+            .markAsDeleted(mailQueueName, enqueueId)
             .doOnNext(ignored -> maybeUpdateBrowseStart(mailQueueName));
     }
 
-    Mono<Boolean> isDeleted(Mail mail, MailQueueName mailQueueName) {
-        return deletedMailsDao.isDeleted(mailQueueName, MailKey.fromMail(mail));
+    Mono<Boolean> isDeleted(EnqueueId enqueueId, MailQueueName mailQueueName) {
+        return deletedMailsDao.isDeleted(mailQueueName, enqueueId);
     }
 
     void updateBrowseStart(MailQueueName mailQueueName) {
         findNewBrowseStart(mailQueueName)
             .flatMap(newBrowseStart -> updateNewBrowseStart(mailQueueName, newBrowseStart))
-            .block();
+            .subscribeOn(Schedulers.elastic())
+            .subscribe();
     }
 
     private void maybeUpdateBrowseStart(MailQueueName mailQueueName) {

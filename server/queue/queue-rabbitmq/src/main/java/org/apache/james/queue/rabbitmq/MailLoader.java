@@ -30,7 +30,6 @@ import org.apache.james.queue.api.MailQueue;
 import org.apache.mailet.Mail;
 
 class MailLoader {
-
     private final Store<MimeMessage, MimeMessagePartsId> mimeMessageStore;
     private final BlobId.Factory blobIdFactory;
 
@@ -39,16 +38,14 @@ class MailLoader {
         this.blobIdFactory = blobIdFactory;
     }
 
-    Mail load(MailReferenceDTO dto) throws MailQueue.MailQueueException {
+    MailWithEnqueueId load(MailReferenceDTO dto) throws MailQueue.MailQueueException {
         try {
-            MimeMessage mimeMessage = mimeMessageStore.read(
-                MimeMessagePartsId.builder()
-                    .headerBlobId(blobIdFactory.from(dto.getHeaderBlobId()))
-                    .bodyBlobId(blobIdFactory.from(dto.getBodyBlobId()))
-                    .build())
-                .block();
+            MailReference mailReference = dto.toMailReference(blobIdFactory);
 
-            return dto.toMailWithMimeMessage(mimeMessage);
+            Mail mail = mailReference.getMail();
+            MimeMessage mimeMessage = mimeMessageStore.read(mailReference.getPartsId()).block();
+            mail.setMessage(mimeMessage);
+            return new MailWithEnqueueId(mailReference.getEnqueueId(), mail);
         } catch (AddressException e) {
             throw new MailQueue.MailQueueException("Failed to parse mail address", e);
         } catch (MessagingException e) {

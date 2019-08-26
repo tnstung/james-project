@@ -17,30 +17,24 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.queue.rabbitmq.view.api;
+package org.apache.james.queue.rabbitmq;
 
-import org.apache.james.queue.api.ManageableMailQueue;
-import org.apache.james.queue.rabbitmq.EnqueueId;
-import org.apache.james.queue.rabbitmq.EnqueuedItem;
-import org.apache.james.queue.rabbitmq.MailQueueName;
+import org.apache.mailet.Mail;
 
-import reactor.core.publisher.Mono;
+public class MailWithEnqueueId {
+    private final EnqueueId enqueueId;
+    private final Mail mail;
 
-public interface MailQueueView {
-
-    interface Factory {
-        MailQueueView create(MailQueueName mailQueueName);
+    MailWithEnqueueId(EnqueueId enqueueId, Mail mail) {
+        this.enqueueId = enqueueId;
+        this.mail = mail;
     }
 
-    void initialize(MailQueueName mailQueueName);
+    public EnqueueId getEnqueueId() {
+        return enqueueId;
+    }
 
-    Mono<Void> storeMail(EnqueuedItem enqueuedItem);
-
-    long delete(DeleteCondition deleteCondition);
-
-    Mono<Boolean> isPresent(EnqueueId id);
-
-    ManageableMailQueue.MailQueueIterator browse();
-
-    long getSize();
+    public Mail getMail() {
+        return mail;
+    }
 }
