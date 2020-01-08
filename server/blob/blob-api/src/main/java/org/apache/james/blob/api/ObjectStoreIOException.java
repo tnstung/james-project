@@ -16,36 +16,16 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+
 package org.apache.james.blob.api;
 
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
+public class ObjectStoreIOException extends ObjectStoreException {
 
-import reactor.core.publisher.Mono;
-
-public interface BlobStore {
-
-    enum StoragePolicy {
-        SIZE_BASED,
-        LOW_COST,
-        HIGH_PERFORMANCE
+    public ObjectStoreIOException(String message) {
+        super(message);
     }
 
-    Mono<BlobId> save(BucketName bucketName, byte[] data, StoragePolicy storagePolicy);
-
-    Mono<BlobId> save(BucketName bucketName, InputStream data, StoragePolicy storagePolicy);
-
-    default Mono<BlobId> save(BucketName bucketName, String data, StoragePolicy storagePolicy) {
-        return save(bucketName, data.getBytes(StandardCharsets.UTF_8), storagePolicy);
+    public ObjectStoreIOException(String message, Throwable cause) {
+        super(message, cause);
     }
-
-    Mono<byte[]> readBytes(BucketName bucketName, BlobId blobId);
-
-    InputStream read(BucketName bucketName, BlobId blobId);
-
-    BucketName getDefaultBucketName();
-
-    Mono<Void> deleteBucket(BucketName bucketName);
-
-    Mono<Void> delete(BucketName bucketName, BlobId blobId);
 }
