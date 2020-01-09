@@ -1,0 +1,996 @@
+{"states": [
+  {
+    "related-action": {
+      "action": "init",
+      "timestamp": "2016-09-08T14:25:52.000Z"
+    },
+    "reference-generations": ["rg1"],
+    "garbage-collection-iterations": ["gci1"],
+    "blobs": [],
+    "references": [],
+    "deletions": []
+  },
+  {
+    "related-action": "save(blob = b1, reference = m1)",
+    "reference-generations": ["rg1"],
+    "garbage-collection-iterations": ["gci1"],
+    "blobs": [{
+      "id": "b1",
+      "reference-generation": "rg1"
+    }],
+    "references": [{
+      "id": "m1",
+      "blob": "b1",
+      "reference-generation": "rg1"
+    }],
+    "deletions": []
+  },
+  {
+    "related-action": {
+      "action": "save(blob = b2, reference = m2)",
+      "timestamp": "2016-09-08T14:25:53.000Z"
+    },
+    "reference-generations": ["rg1"],
+    "garbage-collection-iterations": ["gci1"],
+    "blobs": [{
+      "id": "b1",
+      "reference-generation": "rg1"
+    }, {
+      "id": "b2",
+      "reference-generation": "rg1"
+    }],
+    "references": [{
+      "id": "m1",
+      "blob": "b1",
+      "reference-generation": "rg1"
+    }, {
+        "id": "m2",
+        "blob": "b2",
+        "reference-generation": "rg1"
+      }],
+    "deletions": []
+  }, {
+    "related-action": {
+      "action": "save(blob = b2, reference = m3)",
+      "timestamp": "2016-09-08T14:25:54.000Z"
+    },
+    "reference-generations": ["rg1"],
+    "garbage-collection-iterations": ["gci1"],
+    "blobs": [{
+      "id": "b1",
+      "reference-generation": "rg1"
+    }, {
+      "id": "b2",
+      "reference-generation": "rg1"
+    }],
+    "references": [{
+      "id": "m1",
+      "blob": "b1",
+      "reference-generation": "rg1"
+    }, {
+      "id": "m2",
+      "blob": "b2",
+      "reference-generation": "rg1"
+    }, {
+      "id": "m3",
+      "blob": "b2",
+      "reference-generation": "rg1"
+    }],
+    "deletions": []
+  }, {
+    "related-action": {
+      "action": "incrementGeneration",
+      "timestamp": "2016-09-08T14:25:55.000Z"
+    },
+    "reference-generations": ["rg1", "rg2"],
+    "garbage-collection-iterations": ["gci1"],
+    "blobs": [{
+      "id": "b1",
+      "reference-generation": "rg1"
+    }, {
+      "id": "b2",
+      "reference-generation": "rg1"
+    }],
+    "references": [{
+      "id": "m1",
+      "blob": "b1",
+      "reference-generation": "rg1"
+    }, {
+      "id": "m2",
+      "blob": "b2",
+      "reference-generation": "rg1"
+    }, {
+      "id": "m3",
+      "blob": "b2",
+      "reference-generation": "rg1"
+    }],
+    "deletions": []
+  }, {
+    "related-action": {
+      "action": "garbageCollect",
+      "timestamp": "2016-09-08T14:25:56.000Z"
+    },
+    "reference-generations": ["rg1", "rg2"],
+    "garbage-collection-iterations": ["gci1", "gci2"],
+    "blobs": [{
+      "id": "b1",
+      "reference-generation": "rg1"
+    }, {
+      "id": "b2",
+      "reference-generation": "rg1"
+    }],
+    "references": [{
+      "id": "m1",
+      "blob": "b1",
+      "reference-generation": "rg1"
+    }, {
+      "id": "m2",
+      "blob": "b2",
+      "reference-generation": "rg1"
+    }, {
+      "id": "m3",
+      "blob": "b2",
+      "reference-generation": "rg1"
+    }],
+    "deletions": []
+  }, {
+    "related-action": {
+      "action": "save(blob = b3, reference = m4)",
+      "timestamp": "2016-09-08T14:25:57.000Z"
+    },
+    "reference-generations": ["rg1", "rg2"],
+    "garbage-collection-iterations": ["gci1", "gci2"],
+    "blobs": [{
+      "id": "b1",
+      "reference-generation": "rg1"
+    }, {
+      "id": "b2",
+      "reference-generation": "rg1"
+    }, {
+      "id": "b3",
+      "reference-generation": "rg2"
+    }],
+    "references": [{
+      "id": "m1",
+      "blob": "b1",
+      "reference-generation": "rg1"
+    }, {
+      "id": "m2",
+      "blob": "b2",
+      "reference-generation": "rg1"
+    }, {
+      "id": "m3",
+      "blob": "b2",
+      "reference-generation": "rg1"
+    }, {
+      "id": "m4",
+      "blob": "b3",
+      "reference-generation": "rg2"
+    }],
+    "deletions": []
+  }, {
+    "related-action": {
+      "action": "save(blob = b4, reference = m5)",
+      "timestamp": "2016-09-08T14:25:58.000Z"
+    },
+    "reference-generations": ["rg1", "rg2"],
+    "garbage-collection-iterations": ["gci1", "gci2"],
+    "blobs": [{
+      "id": "b1",
+      "reference-generation": "rg1"
+    }, {
+      "id": "b2",
+      "reference-generation": "rg1"
+    }, {
+      "id": "b3",
+      "reference-generation": "rg2"
+    }, {
+      "id": "b4",
+      "reference-generation": "rg2"
+    }],
+    "references": [{
+      "id": "m1",
+      "blob": "b1",
+      "reference-generation": "rg1"
+    }, {
+      "id": "m2",
+      "blob": "b2",
+      "reference-generation": "rg1"
+    }, {
+      "id": "m3",
+      "blob": "b2",
+      "reference-generation": "rg1"
+    }, {
+      "id": "m4",
+      "blob": "b3",
+      "reference-generation": "rg2"
+    }, {
+      "id": "m5",
+      "blob": "b4",
+      "reference-generation": "rg2"
+    }],
+    "deletions": []
+  }, {
+    "related-action": {
+      "action": "save(blob = b4, reference = m6)",
+      "timestamp": "2016-09-08T14:25:59.000Z"
+    },
+    "reference-generations": ["rg1", "rg2"],
+    "garbage-collection-iterations": ["gci1", "gci2"],
+    "blobs": [{
+      "id": "b1",
+      "reference-generation": "rg1"
+    }, {
+      "id": "b2",
+      "reference-generation": "rg1"
+    }, {
+      "id": "b3",
+      "reference-generation": "rg2"
+    }, {
+      "id": "b4",
+      "reference-generation": "rg2"
+    }],
+    "references": [{
+      "id": "m1",
+      "blob": "b1",
+      "reference-generation": "rg1"
+    }, {
+      "id": "m2",
+      "blob": "b2",
+      "reference-generation": "rg1"
+    }, {
+      "id": "m3",
+      "blob": "b2",
+      "reference-generation": "rg1"
+    }, {
+      "id": "m4",
+      "blob": "b3",
+      "reference-generation": "rg2"
+    }, {
+      "id": "m5",
+      "blob": "b4",
+      "reference-generation": "rg2"
+    }, {
+      "id": "m6",
+      "blob": "b4",
+      "reference-generation": "rg2"
+    }],
+    "deletions": []
+  },
+  {
+    "related-action": {
+      "action": "incrementGeneration",
+      "timestamp": "2016-09-08T14:26:00.000Z"
+    },
+    "reference-generations": ["rg1", "rg2", "rg3"],
+    "garbage-collection-iterations": ["gci1", "gci2"],
+    "blobs": [{
+      "id": "b1",
+      "reference-generation": "rg1"
+    }, {
+      "id": "b2",
+      "reference-generation": "rg1"
+    }, {
+      "id": "b3",
+      "reference-generation": "rg2"
+    }, {
+      "id": "b4",
+      "reference-generation": "rg2"
+    }],
+    "references": [{
+      "id": "m1",
+      "blob": "b1",
+      "reference-generation": "rg1"
+    }, {
+      "id": "m2",
+      "blob": "b2",
+      "reference-generation": "rg1"
+    }, {
+      "id": "m3",
+      "blob": "b2",
+      "reference-generation": "rg1"
+    }, {
+      "id": "m4",
+      "blob": "b3",
+      "reference-generation": "rg2"
+    }, {
+      "id": "m5",
+      "blob": "b4",
+      "reference-generation": "rg2"
+    }, {
+      "id": "m6",
+      "blob": "b4",
+      "reference-generation": "rg2"
+    }],
+    "deletions": []
+  },
+  {
+    "related-action": {
+      "action": "garbageCollect",
+      "timestamp": "2016-09-08T14:26:01.000Z"
+    },
+    "reference-generations": ["rg1", "rg2", "rg3"],
+    "garbage-collection-iterations": ["gci1", "gci2", "gci3"],
+    "blobs": [{
+      "id": "b1",
+      "reference-generation": "rg1"
+    }, {
+      "id": "b2",
+      "reference-generation": "rg1"
+    }, {
+      "id": "b3",
+      "reference-generation": "rg2"
+    }, {
+      "id": "b4",
+      "reference-generation": "rg2"
+    }],
+    "references": [{
+      "id": "m1",
+      "blob": "b1",
+      "reference-generation": "rg1"
+    }, {
+      "id": "m2",
+      "blob": "b2",
+      "reference-generation": "rg1"
+    }, {
+      "id": "m3",
+      "blob": "b2",
+      "reference-generation": "rg1"
+    }, {
+      "id": "m4",
+      "blob": "b3",
+      "reference-generation": "rg2"
+    }, {
+      "id": "m5",
+      "blob": "b4",
+      "reference-generation": "rg2"
+    }, {
+      "id": "m6",
+      "blob": "b4",
+      "reference-generation": "rg2"
+    }],
+    "deletions": []
+  },
+  {
+    "related-action": {
+      "action": "save(blob = b5, reference = m7)",
+      "timestamp": "2016-09-08T14:26:02.000Z"
+    },
+    "reference-generations": ["rg1", "rg2", "rg3"],
+    "garbage-collection-iterations": ["gci1", "gci2", "gci3"],
+    "blobs": [{
+      "id": "b1",
+      "reference-generation": "rg1"
+    }, {
+      "id": "b2",
+      "reference-generation": "rg1"
+    }, {
+      "id": "b3",
+      "reference-generation": "rg2"
+    }, {
+      "id": "b4",
+      "reference-generation": "rg2"
+    }, {
+      "id": "b5",
+      "reference-generation": "rg3"
+    }],
+    "references": [{
+      "id": "m1",
+      "blob": "b1",
+      "reference-generation": "rg1"
+    }, {
+      "id": "m2",
+      "blob": "b2",
+      "reference-generation": "rg1"
+    }, {
+      "id": "m3",
+      "blob": "b2",
+      "reference-generation": "rg1"
+    }, {
+      "id": "m4",
+      "blob": "b3",
+      "reference-generation": "rg2"
+    }, {
+      "id": "m5",
+      "blob": "b4",
+      "reference-generation": "rg2"
+    }, {
+      "id": "m6",
+      "blob": "b4",
+      "reference-generation": "rg2"
+    }, {
+      "id": "m7",
+      "blob": "b5",
+      "reference-generation": "rg3"
+    }],
+    "deletions": []
+  },
+  {
+    "related-action": {
+      "action": "save(blob = b6, reference = m8)",
+      "timestamp": "2016-09-08T14:26:03.000Z"
+    },
+    "reference-generations": ["rg1", "rg2", "rg3"],
+    "garbage-collection-iterations": ["gci1", "gci2", "gci3"],
+    "blobs": [{
+      "id": "b1",
+      "reference-generation": "rg1"
+    }, {
+      "id": "b2",
+      "reference-generation": "rg1"
+    }, {
+      "id": "b3",
+      "reference-generation": "rg2"
+    }, {
+      "id": "b4",
+      "reference-generation": "rg2"
+    }, {
+      "id": "b5",
+      "reference-generation": "rg3"
+    }, {
+      "id": "b6",
+      "reference-generation": "rg3"
+    }],
+    "references": [{
+      "id": "m1",
+      "blob": "b1",
+      "reference-generation": "rg1"
+    }, {
+      "id": "m2",
+      "blob": "b2",
+      "reference-generation": "rg1"
+    }, {
+      "id": "m3",
+      "blob": "b2",
+      "reference-generation": "rg1"
+    }, {
+      "id": "m4",
+      "blob": "b3",
+      "reference-generation": "rg2"
+    }, {
+      "id": "m5",
+      "blob": "b4",
+      "reference-generation": "rg2"
+    }, {
+      "id": "m6",
+      "blob": "b4",
+      "reference-generation": "rg2"
+    }, {
+      "id": "m7",
+      "blob": "b5",
+      "reference-generation": "rg3"
+    }, {
+      "id": "m8",
+      "blob": "b6",
+      "reference-generation": "rg3"
+    }],
+    "deletions": []
+  },
+  {
+    "related-action": {
+      "action": "save(blob = b6, reference = m9)",
+      "timestamp": "2016-09-08T14:26:03.000Z"
+    },
+    "reference-generations": ["rg1", "rg2", "rg3"],
+    "garbage-collection-iterations": ["gci1", "gci2", "gci3"],
+    "blobs": [{
+      "id": "b1",
+      "reference-generation": "rg1"
+    }, {
+      "id": "b2",
+      "reference-generation": "rg1"
+    }, {
+      "id": "b3",
+      "reference-generation": "rg2"
+    }, {
+      "id": "b4",
+      "reference-generation": "rg2"
+    }, {
+      "id": "b5",
+      "reference-generation": "rg3"
+    }, {
+      "id": "b6",
+      "reference-generation": "rg3"
+    }],
+    "references": [{
+      "id": "m1",
+      "blob": "b1",
+      "reference-generation": "rg1"
+    }, {
+      "id": "m2",
+      "blob": "b2",
+      "reference-generation": "rg1"
+    }, {
+      "id": "m3",
+      "blob": "b2",
+      "reference-generation": "rg1"
+    }, {
+      "id": "m4",
+      "blob": "b3",
+      "reference-generation": "rg2"
+    }, {
+      "id": "m5",
+      "blob": "b4",
+      "reference-generation": "rg2"
+    }, {
+      "id": "m6",
+      "blob": "b4",
+      "reference-generation": "rg2"
+    }, {
+      "id": "m7",
+      "blob": "b5",
+      "reference-generation": "rg3"
+    }, {
+      "id": "m8",
+      "blob": "b6",
+      "reference-generation": "rg3"
+    }, {
+      "id": "m9",
+      "blob": "b6",
+      "reference-generation": "rg3"
+    }],
+    "deletions": []
+  },
+  {
+    "related-action": {
+      "action": "delete(reference = m1)",
+      "timestamp": "2016-09-08T14:26:04.000Z"
+    },
+    "reference-generations": ["rg1", "rg2", "rg3"],
+    "garbage-collection-iterations": ["gci1", "gci2", "gci3"],
+    "blobs": [{
+      "id": "b1",
+      "reference-generation": "rg1"
+    }, {
+      "id": "b2",
+      "reference-generation": "rg1"
+    }, {
+      "id": "b3",
+      "reference-generation": "rg2"
+    }, {
+      "id": "b4",
+      "reference-generation": "rg2"
+    }, {
+      "id": "b5",
+      "reference-generation": "rg3"
+    }, {
+      "id": "b6",
+      "reference-generation": "rg3"
+    }],
+    "references": [{
+      "id": "m2",
+      "blob": "b2",
+      "reference-generation": "rg1"
+    }, {
+      "id": "m3",
+      "blob": "b2",
+      "reference-generation": "rg1"
+    }, {
+      "id": "m4",
+      "blob": "b3",
+      "reference-generation": "rg2"
+    }, {
+      "id": "m5",
+      "blob": "b4",
+      "reference-generation": "rg2"
+    }, {
+      "id": "m6",
+      "blob": "b4",
+      "reference-generation": "rg2"
+    }, {
+      "id": "m7",
+      "blob": "b5",
+      "reference-generation": "rg3"
+    }, {
+      "id": "m8",
+      "blob": "b6",
+      "reference-generation": "rg3"
+    }, {
+      "id": "m9",
+      "blob": "b6",
+      "reference-generation": "rg3"
+    }],
+    "deletions": [{
+      "blob": "b1",
+      "reference-generation" : "rg1",
+      "garbage-collection-iterations": "gci3"
+    }]
+  },
+  {
+    "related-action": {
+      "action": "delete(reference = m2)",
+      "timestamp": "2016-09-08T14:26:04.000Z"
+    },
+    "reference-generations": ["rg1", "rg2", "rg3"],
+    "garbage-collection-iterations": ["gci1", "gci2", "gci3"],
+    "blobs": [{
+      "id": "b1",
+      "reference-generation": "rg1"
+    }, {
+      "id": "b2",
+      "reference-generation": "rg1"
+    }, {
+      "id": "b3",
+      "reference-generation": "rg2"
+    }, {
+      "id": "b4",
+      "reference-generation": "rg2"
+    }, {
+      "id": "b5",
+      "reference-generation": "rg3"
+    }, {
+      "id": "b6",
+      "reference-generation": "rg3"
+    }],
+    "references": [{
+      "id": "m3",
+      "blob": "b2",
+      "reference-generation": "rg1"
+    }, {
+      "id": "m4",
+      "blob": "b3",
+      "reference-generation": "rg2"
+    }, {
+      "id": "m5",
+      "blob": "b4",
+      "reference-generation": "rg2"
+    }, {
+      "id": "m6",
+      "blob": "b4",
+      "reference-generation": "rg2"
+    }, {
+      "id": "m7",
+      "blob": "b5",
+      "reference-generation": "rg3"
+    }, {
+      "id": "m8",
+      "blob": "b6",
+      "reference-generation": "rg3"
+    }, {
+      "id": "m9",
+      "blob": "b6",
+      "reference-generation": "rg3"
+    }],
+    "deletions": [{
+      "blob": "b1",
+      "reference-generation" : "rg1",
+      "garbage-collection-iterations": "gci3"
+    }, {
+      "blob": "b2",
+      "reference-generation" : "rg1",
+      "garbage-collection-iterations": "gci3"
+    }]
+  },
+  {
+    "related-action": {
+      "action": "delete(reference = m7)",
+      "timestamp": "2016-09-08T14:26:05.000Z"
+    },
+    "reference-generations": ["rg1", "rg2", "rg3"],
+    "garbage-collection-iterations": ["gci1", "gci2", "gci3"],
+    "blobs": [{
+      "id": "b1",
+      "reference-generation": "rg1"
+    }, {
+      "id": "b2",
+      "reference-generation": "rg1"
+    }, {
+      "id": "b3",
+      "reference-generation": "rg2"
+    }, {
+      "id": "b4",
+      "reference-generation": "rg2"
+    }, {
+      "id": "b5",
+      "reference-generation": "rg3"
+    }, {
+      "id": "b6",
+      "reference-generation": "rg3"
+    }],
+    "references": [{
+      "id": "m3",
+      "blob": "b2",
+      "reference-generation": "rg1"
+    }, {
+      "id": "m4",
+      "blob": "b3",
+      "reference-generation": "rg2"
+    }, {
+      "id": "m5",
+      "blob": "b4",
+      "reference-generation": "rg2"
+    }, {
+      "id": "m6",
+      "blob": "b4",
+      "reference-generation": "rg2"
+    }, {
+      "id": "m8",
+      "blob": "b6",
+      "reference-generation": "rg3"
+    }, {
+      "id": "m9",
+      "blob": "b6",
+      "reference-generation": "rg3"
+    }],
+    "deletions": [{
+      "blob": "b1",
+      "reference-generation" : "rg1",
+      "garbage-collection-iterations": "gci3"
+    }, {
+      "blob": "b2",
+      "reference-generation" : "rg1",
+      "garbage-collection-iterations": "gci3"
+    }, {
+      "blob": "b5",
+      "reference-generation" : "rg3",
+      "garbage-collection-iterations": "gci3"
+    }]
+  },
+  {
+    "related-action": {
+      "action": "delete(reference = m8)",
+      "timestamp": "2016-09-08T14:26:06.000Z"
+    },
+    "reference-generations": ["rg1", "rg2", "rg3"],
+    "garbage-collection-iterations": ["gci1", "gci2", "gci3"],
+    "blobs": [{
+      "id": "b1",
+      "reference-generation": "rg1"
+    }, {
+      "id": "b2",
+      "reference-generation": "rg1"
+    }, {
+      "id": "b3",
+      "reference-generation": "rg2"
+    }, {
+      "id": "b4",
+      "reference-generation": "rg2"
+    }, {
+      "id": "b5",
+      "reference-generation": "rg3"
+    }, {
+      "id": "b6",
+      "reference-generation": "rg3"
+    }],
+    "references": [{
+      "id": "m3",
+      "blob": "b2",
+      "reference-generation": "rg1"
+    }, {
+      "id": "m4",
+      "blob": "b3",
+      "reference-generation": "rg2"
+    }, {
+      "id": "m5",
+      "blob": "b4",
+      "reference-generation": "rg2"
+    }, {
+      "id": "m6",
+      "blob": "b4",
+      "reference-generation": "rg2"
+    }, {
+      "id": "m9",
+      "blob": "b6",
+      "reference-generation": "rg3"
+    }],
+    "deletions": [{
+      "blob": "b1",
+      "reference-generation" : "rg1",
+      "garbage-collection-iterations": "gci3"
+    }, {
+      "blob": "b2",
+      "reference-generation" : "rg1",
+      "garbage-collection-iterations": "gci3"
+    }, {
+      "blob": "b5",
+      "reference-generation" : "rg3",
+      "garbage-collection-iterations": "gci3"
+    }, {
+      "blob": "b6",
+      "reference-generation" : "rg3",
+      "garbage-collection-iterations": "gci3"
+    }]
+  },
+  {
+    "related-action": {
+      "action": "delete(reference = m3)",
+      "timestamp": "2016-09-08T14:26:07.000Z"
+    },
+    "reference-generations": ["rg1", "rg2", "rg3"],
+    "garbage-collection-iterations": ["gci1", "gci2", "gci3"],
+    "blobs": [{
+      "id": "b1",
+      "reference-generation": "rg1"
+    }, {
+      "id": "b2",
+      "reference-generation": "rg1"
+    }, {
+      "id": "b3",
+      "reference-generation": "rg2"
+    }, {
+      "id": "b4",
+      "reference-generation": "rg2"
+    }, {
+      "id": "b5",
+      "reference-generation": "rg3"
+    }, {
+      "id": "b6",
+      "reference-generation": "rg3"
+    }],
+    "references": [{
+      "id": "m4",
+      "blob": "b3",
+      "reference-generation": "rg2"
+    }, {
+      "id": "m5",
+      "blob": "b4",
+      "reference-generation": "rg2"
+    }, {
+      "id": "m6",
+      "blob": "b4",
+      "reference-generation": "rg2"
+    }, {
+      "id": "m9",
+      "blob": "b6",
+      "reference-generation": "rg3"
+    }],
+    "deletions": [{
+      "blob": "b1",
+      "reference-generation" : "rg1",
+      "garbage-collection-iterations": "gci3"
+    }, {
+      "blob": "b2",
+      "reference-generation" : "rg1",
+      "garbage-collection-iterations": "gci3"
+    }, {
+      "blob": "b5",
+      "reference-generation" : "rg3",
+      "garbage-collection-iterations": "gci3"
+    }, {
+      "blob": "b6",
+      "reference-generation" : "rg3",
+      "garbage-collection-iterations": "gci3"
+    }]
+  },
+  {
+    "related-action": {
+      "action": "garbageCollect",
+      "timestamp": "2016-09-08T14:26:08.000Z"
+    },
+    "reference-generations": ["rg1", "rg2", "rg3"],
+    "garbage-collection-iterations": ["gci1", "gci2", "gci3", "gci4"],
+    "blobs": [{
+      "id": "b2",
+      "reference-generation": "rg1"
+    }, {
+      "id": "b3",
+      "reference-generation": "rg2"
+    }, {
+      "id": "b4",
+      "reference-generation": "rg2"
+    }, {
+      "id": "b5",
+      "reference-generation": "rg3"
+    }, {
+      "id": "b6",
+      "reference-generation": "rg3"
+    }],
+    "references": [{
+      "id": "m4",
+      "blob": "b3",
+      "reference-generation": "rg2"
+    }, {
+      "id": "m5",
+      "blob": "b4",
+      "reference-generation": "rg2"
+    }, {
+      "id": "m6",
+      "blob": "b4",
+      "reference-generation": "rg2"
+    }, {
+      "id": "m9",
+      "blob": "b6",
+      "reference-generation": "rg3"
+    }],
+    "deletions": [{
+      "blob": "b2",
+      "reference-generation" : "rg1",
+      "garbage-collection-iterations": "gci3"
+    }, {
+      "blob": "b5",
+      "reference-generation" : "rg3",
+      "garbage-collection-iterations": "gci3"
+    }, {
+      "blob": "b6",
+      "reference-generation" : "rg3",
+      "garbage-collection-iterations": "gci3"
+    }]
+  },
+  {
+    "related-action": {
+      "action": "garbageCollect",
+      "timestamp": "2016-09-08T14:26:08.000Z"
+    },
+    "reference-generations": ["rg1", "rg2", "rg3"],
+    "garbage-collection-iterations": ["gci1", "gci2", "gci3", "gci4"],
+    "blobs": [{
+      "id": "b3",
+      "reference-generation": "rg2"
+    }, {
+      "id": "b4",
+      "reference-generation": "rg2"
+    }, {
+      "id": "b5",
+      "reference-generation": "rg3"
+    }, {
+      "id": "b6",
+      "reference-generation": "rg3"
+    }],
+    "references": [{
+      "id": "m4",
+      "blob": "b3",
+      "reference-generation": "rg2"
+    }, {
+      "id": "m5",
+      "blob": "b4",
+      "reference-generation": "rg2"
+    }, {
+      "id": "m6",
+      "blob": "b4",
+      "reference-generation": "rg2"
+    }, {
+      "id": "m9",
+      "blob": "b6",
+      "reference-generation": "rg3"
+    }],
+    "deletions": [{
+      "blob": "b5",
+      "reference-generation" : "rg3",
+      "garbage-collection-iterations": "gci3"
+    }, {
+      "blob": "b6",
+      "reference-generation" : "rg3",
+      "garbage-collection-iterations": "gci3"
+    }]
+  }, {
+    "related-action": {
+      "action": "garbageCollect",
+      "timestamp": "2016-09-08T14:26:08.000Z"
+    },
+    "reference-generations": ["rg1", "rg2", "rg3"],
+    "garbage-collection-iterations": ["gci1", "gci2", "gci3", "gci4"],
+    "blobs": [{
+      "id": "b3",
+      "reference-generation": "rg2"
+    }, {
+      "id": "b4",
+      "reference-generation": "rg2"
+    }, {
+      "id": "b6",
+      "reference-generation": "rg3"
+    }],
+    "references": [{
+      "id": "m4",
+      "blob": "b3",
+      "reference-generation": "rg2"
+    }, {
+      "id": "m5",
+      "blob": "b4",
+      "reference-generation": "rg2"
+    }, {
+      "id": "m6",
+      "blob": "b4",
+      "reference-generation": "rg2"
+    }, {
+      "id": "m9",
+      "blob": "b6",
+      "reference-generation": "rg3"
+    }],
+    "deletions": [{
+      "blob": "b6",
+      "reference-generation" : "rg3",
+      "garbage-collection-iterations": "gci3"
+    }]
+  }
+]
+}

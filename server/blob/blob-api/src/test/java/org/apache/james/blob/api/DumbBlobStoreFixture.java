@@ -18,34 +18,20 @@
  ****************************************************************/
 package org.apache.james.blob.api;
 
-import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
-import reactor.core.publisher.Mono;
+import com.google.common.base.Strings;
 
-public interface BlobStore {
+public interface DumbBlobStoreFixture {
+    BucketName TEST_BUCKET_NAME = BucketName.of("my-test-bucket");
+    BucketName CUSTOM_BUCKET_NAME = BucketName.of("custom");
+    BlobId TEST_BLOB_ID = new TestBlobId("test-blob-id");
+    BlobId OTHER_TEST_BLOB_ID = new TestBlobId("other-test-blob-id");
+    String SHORT_STRING = "toto";
+    byte[] EMPTY_BYTEARRAY = {};
+    byte[] SHORT_BYTEARRAY = SHORT_STRING.getBytes(StandardCharsets.UTF_8);
+    byte[] ELEVEN_KILOBYTES = Strings.repeat("2103456789\n", 1000).getBytes(StandardCharsets.UTF_8);
+    String TWELVE_MEGABYTES_STRING = Strings.repeat("7893456789\r\n", 1024 * 10);
+    byte[] TWELVE_MEGABYTES = TWELVE_MEGABYTES_STRING.getBytes(StandardCharsets.UTF_8);
 
-    enum StoragePolicy {
-        SIZE_BASED,
-        LOW_COST,
-        HIGH_PERFORMANCE
-    }
-
-    Mono<BlobId> save(BucketName bucketName, byte[] data, StoragePolicy storagePolicy);
-
-    Mono<BlobId> save(BucketName bucketName, InputStream data, StoragePolicy storagePolicy);
-
-    default Mono<BlobId> save(BucketName bucketName, String data, StoragePolicy storagePolicy) {
-        return save(bucketName, data.getBytes(StandardCharsets.UTF_8), storagePolicy);
-    }
-
-    Mono<byte[]> readBytes(BucketName bucketName, BlobId blobId);
-
-    InputStream read(BucketName bucketName, BlobId blobId);
-
-    BucketName getDefaultBucketName();
-
-    Mono<Void> deleteBucket(BucketName bucketName);
-
-    Mono<Void> delete(BucketName bucketName, BlobId blobId);
 }
