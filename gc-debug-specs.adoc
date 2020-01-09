@@ -1,0 +1,83 @@
+= GC Debug frontend spec
+
+== What should be displayed
+
+=== State Navigation
+
+The default view should display the first state.
+The URL should allow to navigate to a given state.
+We should be able to navigate between states with a slider, and with a table of snapshots displaying their `related-action`
+
+=== State Display
+
+A state is represented by :
+
+Its `related-action`
+
+And with the following elements which should be displayed in tables :
+
+ - The list of `reference-generations`
+ - The list of `garbage-collection-iterations`
+ - The list of `blobs`
+ - The list of `references`
+ - The list of `deletions`
+
+
+.`reference-generations`
+|===
+|reference generation id
+
+|rg1
+
+|rg2
+|===
+
+
+.`garbage-collection-iteration`
+|===
+|garbage collection iteration id
+
+|gci1
+
+|gci2
+|===
+
+
+.`blobs`
+|===
+|blob id |reference generation id
+
+|b1
+|rg1
+
+|b2
+|rg2
+|===
+
+
+.`references`
+|===
+|id |blob id |reference generation id
+
+|m1
+|b1
+|rg1
+
+|m2
+|b2
+|rg2
+|===
+
+.`deletions`
+|===
+|blob id |reference generation id |garbage collection iteration id
+
+|b1
+|rg1
+|gci1
+
+|b2
+|rg2
+|gci2
+|===
+
