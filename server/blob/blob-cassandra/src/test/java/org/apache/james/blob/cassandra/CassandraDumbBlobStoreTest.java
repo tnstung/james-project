@@ -32,7 +32,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class CassandraDumbBlobStoreTest implements DumbBlobStoreContract {
-    private static final int CHUNK_SIZE = 1024;
+    private static final int CHUNK_SIZE = 10240;
     private static final int MULTIPLE_CHUNK_SIZE = 3;
 
     @RegisterExtension

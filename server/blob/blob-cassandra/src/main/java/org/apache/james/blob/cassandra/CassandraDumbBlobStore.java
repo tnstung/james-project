@@ -25,7 +25,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
@@ -46,6 +45,7 @@ import com.google.common.io.ByteSource;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
+import reactor.util.function.Tuple2;
 
 public class CassandraDumbBlobStore implements DumbBlobStore {
 
@@ -91,17 +91,26 @@ public class CassandraDumbBlobStore implements DumbBlobStore {
         return saveAsMono(bucketName, blobId, data);
     }
 
-    private Mono<Void> saveAsMono(BucketName bucketName, BlobId blobId, byte[] data) {
-        return saveBlobParts(bucketName, data, blobId)
+    private Mono<Void> saveAsMono(BucketName bucketName, BlobId blobId, InputStream stream) {
+
+        return Mono.fromCallable(() -> IOUtils.toByteArray(stream))
+            .map(bytes -> dataChunker.chunk(bytes, configuration.getBlobPartSize()))
+            .flatMap(chunks -> saveBlobParts(bucketName, blobId, chunks))
             .flatMap(numberOfChunk -> saveBlobPartReference(bucketName, blobId, numberOfChunk));
     }
 
-    private Mono<Integer> saveBlobParts(BucketName bucketName, byte[] data, BlobId blobId) {
 
-        Stream<Pair<Integer, ByteBuffer>> chunks = dataChunker.chunk(data, configuration.getBlobPartSize());
-        return Flux.fromStream(chunks)
+    private Mono<Void> saveAsMono(BucketName bucketName, BlobId blobId, byte[] data) {
+        return Mono.fromCallable(() -> dataChunker.chunk(data, configuration.getBlobPartSize()))
+            .flatMap(chunks -> saveBlobParts(bucketName, blobId, chunks))
+            .flatMap(numberOfChunk -> saveBlobPartReference(bucketName, blobId, numberOfChunk));
+    }
+
+    private Mono<Integer> saveBlobParts(BucketName bucketName, BlobId blobId, Flux<ByteBuffer> chunksAsFlux) {
+        return chunksAsFlux
             .publishOn(Schedulers.elastic(), PREFETCH)
-            .flatMap(pair -> writePart(bucketName, blobId, pair.getKey(), pair.getValue())
+            .index()
+            .flatMap(pair -> writePart(bucketName, blobId, pair.getT1().intValue(), pair.getT2())
                 .then(Mono.just(getChunkNum(pair))))
             .collect(Collectors.maxBy(Comparator.comparingInt(x -> x)))
             .flatMap(Mono::justOrEmpty)
@@ -122,8 +131,8 @@ public class CassandraDumbBlobStore implements DumbBlobStore {
         return number + 1;
     }
 
-    private Integer getChunkNum(Pair<Integer, ByteBuffer> pair) {
-        return pair.getKey();
+    private Integer getChunkNum(Tuple2<Long, ByteBuffer> pair) {
+        return pair.getT1().intValue();
     }
 
     private Mono<Void> saveBlobPartReference(BucketName bucketName, BlobId blobId, Integer numberOfChunk) {
@@ -142,8 +151,7 @@ public class CassandraDumbBlobStore implements DumbBlobStore {
     public Mono<Void> save(BucketName bucketName, BlobId blobId, InputStream inputStream) {
         Preconditions.checkNotNull(bucketName);
         Preconditions.checkNotNull(inputStream);
-        return Mono.fromCallable(() -> IOUtils.toByteArray(inputStream))
-            .flatMap(bytes -> saveAsMono(bucketName, blobId, bytes))
+        return saveAsMono(bucketName, blobId, inputStream)
             .onErrorMap(e -> new IOObjectStoreException("Exception occurred while saving input stream", e));
     }
 
