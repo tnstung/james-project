@@ -52,7 +52,6 @@ public class CassandraDumbBlobStoreTest implements DumbBlobStoreContract {
                 CassandraConfiguration.builder()
                     .blobPartSize(CHUNK_SIZE)
                     .build(),
-                blobIdFactory,
             BucketName.DEFAULT);
     }
 
