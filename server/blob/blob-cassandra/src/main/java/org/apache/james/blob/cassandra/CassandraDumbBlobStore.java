@@ -21,14 +21,11 @@ package org.apache.james.blob.cassandra;
 
 import java.io.InputStream;
 import java.nio.ByteBuffer;
-import java.util.Comparator;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.blob.api.BlobId;
@@ -88,21 +85,29 @@ public class CassandraDumbBlobStore implements DumbBlobStore {
     public Mono<Void> save(BucketName bucketName, BlobId blobId, byte[] data) {
         Preconditions.checkNotNull(data);
 
-        return saveAsMono(bucketName, blobId, data);
-    }
-
-    private Mono<Void> saveAsMono(BucketName bucketName, BlobId blobId, InputStream stream) {
-
-        return Mono.fromCallable(() -> IOUtils.toByteArray(stream))
-            .map(bytes -> dataChunker.chunk(bytes, configuration.getBlobPartSize()))
-            .flatMap(chunks -> saveBlobParts(bucketName, blobId, chunks))
-            .flatMap(numberOfChunk -> saveBlobPartReference(bucketName, blobId, numberOfChunk));
-    }
-
-
-    private Mono<Void> saveAsMono(BucketName bucketName, BlobId blobId, byte[] data) {
         return Mono.fromCallable(() -> dataChunker.chunk(data, configuration.getBlobPartSize()))
-            .flatMap(chunks -> saveBlobParts(bucketName, blobId, chunks))
+            .flatMap(chunks -> save(bucketName, blobId, chunks));
+    }
+
+    @Override
+    public Mono<Void> save(BucketName bucketName, BlobId blobId, InputStream inputStream) {
+        Preconditions.checkNotNull(bucketName);
+        Preconditions.checkNotNull(inputStream);
+
+        return Mono.fromCallable(() -> dataChunker.chunkStream(inputStream, configuration.getBlobPartSize()))
+            .flatMap(chunks -> save(bucketName, blobId, chunks))
+            .onErrorMap(e -> new IOObjectStoreException("Exception occurred while saving input stream", e));
+    }
+
+    @Override
+    public Mono<Void> save(BucketName bucketName, BlobId blobId, ByteSource content) {
+        return Mono.using(content::openBufferedStream,
+            stream -> save(bucketName, blobId, stream),
+            Throwing.consumer(InputStream::close).sneakyThrow());
+    }
+
+    private Mono<Void> save(BucketName bucketName, BlobId blobId, Flux<ByteBuffer> chunksAsFlux) {
+        return saveBlobParts(bucketName, blobId, chunksAsFlux)
             .flatMap(numberOfChunk -> saveBlobPartReference(bucketName, blobId, numberOfChunk));
     }
 
@@ -110,14 +115,10 @@ public class CassandraDumbBlobStore implements DumbBlobStore {
         return chunksAsFlux
             .publishOn(Schedulers.elastic(), PREFETCH)
             .index()
-            .flatMap(pair -> writePart(bucketName, blobId, pair.getT1().intValue(), pair.getT2())
-                .then(Mono.just(getChunkNum(pair))))
-            .collect(Collectors.maxBy(Comparator.comparingInt(x -> x)))
-            .flatMap(Mono::justOrEmpty)
-            .map(this::numToCount)
-            .defaultIfEmpty(0);
+            .flatMap(pair -> writePart(bucketName, blobId, pair.getT1().intValue(), pair.getT2()).thenReturn(getChunkNum(pair)))
+            .count()
+            .map(Long::intValue);
     }
-
 
     private Mono<Void> writePart(BucketName bucketName, BlobId blobId, int position, ByteBuffer data) {
         if (isDefaultBucket(bucketName)) {
@@ -125,10 +126,6 @@ public class CassandraDumbBlobStore implements DumbBlobStore {
         } else {
             return bucketDAO.writePart(data, bucketName, blobId, position);
         }
-    }
-
-    private int numToCount(int number) {
-        return number + 1;
     }
 
     private Integer getChunkNum(Tuple2<Long, ByteBuffer> pair) {
@@ -145,21 +142,6 @@ public class CassandraDumbBlobStore implements DumbBlobStore {
 
     private boolean isDefaultBucket(BucketName bucketName) {
         return bucketName.equals(defaultBucket);
-    }
-
-    @Override
-    public Mono<Void> save(BucketName bucketName, BlobId blobId, InputStream inputStream) {
-        Preconditions.checkNotNull(bucketName);
-        Preconditions.checkNotNull(inputStream);
-        return saveAsMono(bucketName, blobId, inputStream)
-            .onErrorMap(e -> new IOObjectStoreException("Exception occurred while saving input stream", e));
-    }
-
-    @Override
-    public Mono<Void> save(BucketName bucketName, BlobId blobId, ByteSource content) {
-        return Mono.using(content::openBufferedStream,
-            stream -> save(bucketName, blobId, stream),
-            Throwing.consumer(InputStream::close).sneakyThrow());
     }
 
     @Override
