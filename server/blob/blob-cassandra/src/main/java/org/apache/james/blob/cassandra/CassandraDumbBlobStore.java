@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
@@ -58,7 +59,7 @@ public class CassandraDumbBlobStore implements DumbBlobStore {
     CassandraDumbBlobStore(CassandraDefaultBucketDAO defaultBucketDAO,
                            CassandraBucketDAO bucketDAO,
                            CassandraConfiguration cassandraConfiguration,
-                           BucketName defaultBucket) {
+                           @Named(DEFAULT_BUCKET) BucketName defaultBucket) {
         this.defaultBucketDAO = defaultBucketDAO;
         this.bucketDAO = bucketDAO;
         this.configuration = cassandraConfiguration;
@@ -93,7 +94,7 @@ public class CassandraDumbBlobStore implements DumbBlobStore {
 
         return Mono.fromCallable(() -> dataChunker.chunkStream(inputStream, configuration.getBlobPartSize()))
             .flatMap(chunks -> save(bucketName, blobId, chunks))
-            .onErrorMap(e -> new IOObjectStoreException("Exception occurred while saving input stream", e));
+            .onErrorMap(e -> new ObjectStoreIOException("Exception occurred while saving input stream", e));
     }
 
     @Override
