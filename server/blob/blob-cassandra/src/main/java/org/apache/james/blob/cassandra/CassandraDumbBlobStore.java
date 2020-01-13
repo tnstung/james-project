@@ -46,8 +46,7 @@ import reactor.util.function.Tuple2;
 
 public class CassandraDumbBlobStore implements DumbBlobStore {
 
-    private static final int PREFETCH = 16;
-    private static final int MAX_CONCURRENCY = 1;
+    private static final int PREFETCH = 1;
     private final CassandraDefaultBucketDAO defaultBucketDAO;
     private final CassandraBucketDAO bucketDAO;
     private final DataChunker dataChunker;
@@ -112,7 +111,7 @@ public class CassandraDumbBlobStore implements DumbBlobStore {
         return chunksAsFlux
             .publishOn(Schedulers.elastic(), PREFETCH)
             .index()
-            .flatMap(pair -> writePart(bucketName, blobId, pair.getT1().intValue(), pair.getT2()).thenReturn(getChunkNum(pair)))
+            .concatMap(pair -> writePart(bucketName, blobId, pair.getT1().intValue(), pair.getT2()).thenReturn(getChunkNum(pair)))
             .count()
             .map(Long::intValue);
     }
@@ -189,11 +188,11 @@ public class CassandraDumbBlobStore implements DumbBlobStore {
             .block();
         return Flux.range(0, rowCount)
             .publishOn(Schedulers.elastic(), PREFETCH)
-            .flatMapSequential(partIndex -> readPart(bucketName, blobId, partIndex)
+            .concatMap(partIndex -> readPart(bucketName, blobId, partIndex)
                     .single()
                     .onErrorResume(NoSuchElementException.class, e -> Mono.error(
-                        new ObjectNotFoundException(String.format("Missing blob part for blobId %s and position %d", blobId, partIndex)))),
-                MAX_CONCURRENCY, PREFETCH);
+                        new ObjectNotFoundException(String.format("Missing blob part for blobId %s and position %d", blobId.asString(), partIndex)))),
+                PREFETCH);
     }
 
     private byte[] byteBuffersToBytesArray(List<ByteBuffer> byteBuffers) {
