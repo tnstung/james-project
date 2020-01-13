@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
@@ -46,6 +47,8 @@ import reactor.util.function.Tuple2;
 
 public class CassandraDumbBlobStore implements DumbBlobStore {
 
+    public static final String DEFAULT_BUCKET = "cassandraDefault";
+
     private static final int PREFETCH = 1;
     private final CassandraDefaultBucketDAO defaultBucketDAO;
     private final CassandraBucketDAO bucketDAO;
@@ -57,7 +60,7 @@ public class CassandraDumbBlobStore implements DumbBlobStore {
     CassandraDumbBlobStore(CassandraDefaultBucketDAO defaultBucketDAO,
                            CassandraBucketDAO bucketDAO,
                            CassandraConfiguration cassandraConfiguration,
-                           BucketName defaultBucket) {
+                           @Named(DEFAULT_BUCKET) BucketName defaultBucket) {
         this.defaultBucketDAO = defaultBucketDAO;
         this.bucketDAO = bucketDAO;
         this.configuration = cassandraConfiguration;
