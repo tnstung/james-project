@@ -42,14 +42,13 @@ import com.google.common.base.Preconditions;
 import com.google.common.io.ByteSource;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 import reactor.util.function.Tuple2;
 
 public class CassandraDumbBlobStore implements DumbBlobStore {
 
     public static final String DEFAULT_BUCKET = "cassandraDefault";
+    public static final boolean LAZY = false;
 
-    private static final int PREFETCH = 1;
     private final CassandraDefaultBucketDAO defaultBucketDAO;
     private final CassandraBucketDAO bucketDAO;
     private final DataChunker dataChunker;
@@ -102,7 +101,8 @@ public class CassandraDumbBlobStore implements DumbBlobStore {
     public Mono<Void> save(BucketName bucketName, BlobId blobId, ByteSource content) {
         return Mono.using(content::openBufferedStream,
             stream -> save(bucketName, blobId, stream),
-            Throwing.consumer(InputStream::close).sneakyThrow());
+            Throwing.consumer(InputStream::close).sneakyThrow(),
+            LAZY);
     }
 
     private Mono<Void> save(BucketName bucketName, BlobId blobId, Flux<ByteBuffer> chunksAsFlux) {
@@ -112,7 +112,6 @@ public class CassandraDumbBlobStore implements DumbBlobStore {
 
     private Mono<Integer> saveBlobParts(BucketName bucketName, BlobId blobId, Flux<ByteBuffer> chunksAsFlux) {
         return chunksAsFlux
-            .publishOn(Schedulers.elastic(), PREFETCH)
             .index()
             .concatMap(pair -> writePart(bucketName, blobId, pair.getT1().intValue(), pair.getT2()).thenReturn(getChunkNum(pair)))
             .count()
@@ -183,19 +182,15 @@ public class CassandraDumbBlobStore implements DumbBlobStore {
     }
 
     private Flux<ByteBuffer> readBlobParts(BucketName bucketName, BlobId blobId) {
-        Integer rowCount = selectRowCount(bucketName, blobId)
-            .publishOn(Schedulers.elastic())
+        return selectRowCount(bucketName, blobId)
             .single()
             .onErrorResume(NoSuchElementException.class, e -> Mono.error(
                 new ObjectNotFoundException(String.format("Could not retrieve blob metadata for %s", blobId))))
-            .block();
-        return Flux.range(0, rowCount)
-            .publishOn(Schedulers.elastic(), PREFETCH)
-            .concatMap(partIndex -> readPart(bucketName, blobId, partIndex)
-                    .single()
-                    .onErrorResume(NoSuchElementException.class, e -> Mono.error(
-                        new ObjectNotFoundException(String.format("Missing blob part for blobId %s and position %d", blobId.asString(), partIndex)))),
-                PREFETCH);
+            .flatMapMany(rowCount -> Flux.range(0, rowCount)
+                .concatMap(partIndex -> readPart(bucketName, blobId, partIndex)
+                        .single()
+                        .onErrorResume(NoSuchElementException.class, e -> Mono.error(
+                            new ObjectNotFoundException(String.format("Missing blob part for blobId %s and position %d", blobId.asString(), partIndex))))));
     }
 
     private byte[] byteBuffersToBytesArray(List<ByteBuffer> byteBuffers) {
@@ -206,7 +201,7 @@ public class CassandraDumbBlobStore implements DumbBlobStore {
 
         return byteBuffers
             .stream()
-            .reduce(ByteBuffer.allocate(targetSize), (accumulator, element) -> accumulator.put(element))
+            .reduce(ByteBuffer.allocate(targetSize), ByteBuffer::put)
             .array();
     }
 }
