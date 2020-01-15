@@ -53,14 +53,17 @@ public class SwiftObjectStorage {
     }
 
     public static ObjectStorageBlobStoreBuilder.RequireBlobIdFactory builder(SwiftTempAuthObjectStorage.Configuration testConfig) {
-        return SwiftTempAuthObjectStorage.blobStoreBuilder(testConfig);
+        return null;
+        //return SwiftTempAuthObjectStorage.blobStoreBuilder(testConfig);
     }
 
     public static ObjectStorageBlobStoreBuilder.RequireBlobIdFactory builder(SwiftKeystone2ObjectStorage.Configuration testConfig) {
-        return SwiftKeystone2ObjectStorage.blobStoreBuilder(testConfig);
+        return null;
+        //return SwiftKeystone2ObjectStorage.blobStoreBuilder(testConfig);
     }
 
     public static ObjectStorageBlobStoreBuilder.RequireBlobIdFactory builder(SwiftKeystone3ObjectStorage.Configuration testConfig) {
-        return SwiftKeystone3ObjectStorage.blobStoreBuilder(testConfig);
+        return null;
+        //return SwiftKeystone3ObjectStorage.blobStoreBuilder(testConfig);
     }
 }

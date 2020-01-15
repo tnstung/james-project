@@ -89,6 +89,13 @@ public class AESPayloadCodec implements PayloadCodec {
     }
 
     @Override
+    public Payload write(ByteSource byteSource) throws IOException {
+        try (InputStream inputStream = byteSource.openStream()) {
+            return write(inputStream);
+        }
+    }
+
+    @Override
     public InputStream read(Payload payload) throws IOException {
         try {
             byte[] ciphertext = IOUtils.toByteArray(payload.getPayload().openStream());
@@ -97,6 +104,11 @@ public class AESPayloadCodec implements PayloadCodec {
         } catch (GeneralSecurityException e) {
             throw new IOException("Incorrect crypto setup", e);
         }
+    }
+
+    @Override
+    public InputStream read(InputStream input) throws IOException {
+        return null;
     }
 
 }

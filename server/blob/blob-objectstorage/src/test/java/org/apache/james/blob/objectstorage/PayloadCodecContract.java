@@ -27,6 +27,8 @@ import java.nio.charset.StandardCharsets;
 
 import org.junit.jupiter.api.Test;
 
+import com.google.common.io.ByteSource;
+
 public interface PayloadCodecContract {
     byte[] SOME_BYTES = "james".getBytes(StandardCharsets.UTF_8);
 
@@ -34,6 +36,13 @@ public interface PayloadCodecContract {
     default void shouldBeAbleToReadFromWrittenPayload() throws Exception {
         PayloadCodec codec = codec();
         InputStream actual = codec.read(codec.write(expected()));
+        assertThat(actual).hasSameContentAs(expected());
+    }
+
+    @Test
+    default void shouldBeAbleToReadFromWrittenPayloadFromByteSource() throws Exception {
+        PayloadCodec codec = codec();
+        InputStream actual = codec.read(codec.write(ByteSource.wrap(SOME_BYTES)));
         assertThat(actual).hasSameContentAs(expected());
     }
 

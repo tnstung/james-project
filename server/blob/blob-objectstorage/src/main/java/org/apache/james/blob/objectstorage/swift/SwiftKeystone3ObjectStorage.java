@@ -25,10 +25,11 @@ import java.util.Properties;
 import java.util.function.Supplier;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.james.blob.objectstorage.ObjectStorageBlobStoreBuilder;
+import org.apache.james.blob.objectstorage.ObjectStorageDumbBlobStoreBuilder;
 import org.apache.james.util.OptionalUtils;
 import org.jclouds.ContextBuilder;
 import org.jclouds.blobstore.BlobStore;
+import org.jclouds.http.okhttp.config.OkHttpCommandExecutorServiceModule;
 import org.jclouds.logging.slf4j.config.SLF4JLoggingModule;
 import org.jclouds.openstack.keystone.config.KeystoneProperties;
 import org.jclouds.openstack.swift.v1.blobstore.RegionScopedBlobStoreContext;
@@ -43,10 +44,10 @@ public class SwiftKeystone3ObjectStorage {
     public static final String AUTH_API_NAME = "keystone3";
 
     private static final Iterable<Module> JCLOUDS_MODULES =
-        ImmutableSet.of(new SLF4JLoggingModule());
+        ImmutableSet.of(new SLF4JLoggingModule(), new OkHttpCommandExecutorServiceModule());
 
-    public static ObjectStorageBlobStoreBuilder.RequireBlobIdFactory blobStoreBuilder(Configuration testConfig) {
-        return ObjectStorageBlobStoreBuilder.forBlobStore(new BlobStoreBuilder(testConfig));
+    public static ObjectStorageDumbBlobStoreBuilder blobStoreBuilder(Configuration testConfig) {
+        return ObjectStorageDumbBlobStoreBuilder.forBlobStoreBuilder(new BlobStoreBuilder(testConfig));
     }
 
     public static Configuration.Builder configBuilder() {

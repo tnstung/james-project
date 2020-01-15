@@ -38,7 +38,7 @@ import reactor.retry.Retry;
 
 public class StreamCompatibleBlobPutter implements BlobPutter {
 
-    private static final int MAX_RETRIES = 3;
+    private static final int MAX_RETRIES = 5;
     private static final Duration FIRST_BACK_OFF = Duration.ofMillis(100);
     private static final Duration FOREVER = Duration.ofMillis(Long.MAX_VALUE);
     private static final Location DEFAULT_LOCATION = null;
@@ -58,7 +58,14 @@ public class StreamCompatibleBlobPutter implements BlobPutter {
                 .exponentialBackoff(FIRST_BACK_OFF, FOREVER)
                 .withBackoffScheduler(Schedulers.elastic())
                 .retryMax(MAX_RETRIES)
-                .doOnRetry(retryContext -> blobStore.createContainerInLocation(DEFAULT_LOCATION, bucketName.asString())))
+                .doOnRetry(retryContext -> {
+                    System.out.println("trying to recreate bucket");
+                    try {
+                        System.out.println("trying to recreate bucket : " + blobStore.createContainerInLocation(DEFAULT_LOCATION, bucketName.asString()));
+                    } catch (Throwable t) {
+                        t.printStackTrace();
+                    }
+                }))
             .retryWhen(Retry.onlyIf(RetryContext -> isPutMethod(RetryContext.exception()))
                 .withBackoffScheduler(Schedulers.elastic())
                 .exponentialBackoff(FIRST_BACK_OFF, FOREVER)
@@ -83,8 +90,7 @@ public class StreamCompatibleBlobPutter implements BlobPutter {
     private boolean needToCreateBucket(Throwable throwable, ObjectStorageBucketName bucketName) {
         return Optional.of(throwable)
             .filter(t -> t instanceof HttpResponseException || t instanceof KeyNotFoundException)
-            .flatMap(this::extractHttpException)
-            .map(ex -> isPutMethod(ex) && !bucketExists(bucketName))
+            .map(ex -> !bucketExists(bucketName))
             .orElse(false);
     }
 
@@ -101,7 +107,14 @@ public class StreamCompatibleBlobPutter implements BlobPutter {
     }
 
     private boolean bucketExists(ObjectStorageBucketName bucketName) {
-        return blobStore.containerExists(bucketName.asString());
+        try {
+            return blobStore.containerExists(bucketName.asString());
+        } catch (HttpResponseException e) {
+            if (e.getResponse().getStatusCode() < 500) {
+                return false;
+            }
+            throw e;
+        }
     }
 
     private Optional<HttpResponseException> extractHttpException(Throwable throwable) {

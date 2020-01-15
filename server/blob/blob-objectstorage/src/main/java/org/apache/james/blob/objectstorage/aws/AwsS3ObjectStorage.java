@@ -36,14 +36,15 @@ import javax.inject.Inject;
 import org.apache.commons.io.FileUtils;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.objectstorage.BlobPutter;
-import org.apache.james.blob.objectstorage.ObjectStorageBlobStoreBuilder;
 import org.apache.james.blob.objectstorage.ObjectStorageBucketName;
+import org.apache.james.blob.objectstorage.ObjectStorageDumbBlobStoreBuilder;
 import org.apache.james.util.Size;
 import org.apache.james.util.concurrent.NamedThreadFactory;
 import org.jclouds.ContextBuilder;
 import org.jclouds.blobstore.BlobStore;
 import org.jclouds.blobstore.BlobStoreContext;
 import org.jclouds.blobstore.domain.Blob;
+import org.jclouds.http.okhttp.config.OkHttpCommandExecutorServiceModule;
 import org.jclouds.logging.slf4j.config.SLF4JLoggingModule;
 
 import com.amazonaws.ClientConfiguration;
@@ -62,15 +63,14 @@ import com.github.fge.lambdas.runnable.ThrowingRunnable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Module;
-
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 import reactor.retry.Retry;
 
 public class AwsS3ObjectStorage {
 
-    private static final Iterable<Module> JCLOUDS_MODULES = ImmutableSet.of(new SLF4JLoggingModule());
-    private static final int MAX_THREADS = 5;
+    private static final Iterable<Module> JCLOUDS_MODULES = ImmutableSet.of(new SLF4JLoggingModule(), new OkHttpCommandExecutorServiceModule());
+    public  static final int MAX_THREADS = 5;
     private static final boolean DO_NOT_SHUTDOWN_THREAD_POOL = false;
     private static final int MAX_ERROR_RETRY = 5;
     private static final int MAX_RETRY_ON_EXCEPTION = 3;
@@ -97,8 +97,8 @@ public class AwsS3ObjectStorage {
         executorService.shutdownNow();
     }
 
-    public static ObjectStorageBlobStoreBuilder.RequireBlobIdFactory blobStoreBuilder(AwsS3AuthConfiguration configuration) {
-        return ObjectStorageBlobStoreBuilder.forBlobStore(new BlobStoreBuilder(configuration));
+    public static ObjectStorageDumbBlobStoreBuilder blobStoreBuilder(AwsS3AuthConfiguration configuration) {
+        return ObjectStorageDumbBlobStoreBuilder.forBlobStoreBuilder(new BlobStoreBuilder(configuration));
     }
 
     public Optional<BlobPutter> putBlob(AwsS3AuthConfiguration configuration) {
