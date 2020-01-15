@@ -43,8 +43,7 @@ public class DockerSwiftContainer {
     private DockerSwift dockerSwift;
 
     public DockerSwiftContainer() {
-        this.swiftContainer = new GenericContainer<>(SWIFT_DOCKER_IMAGE);
-        this.swiftContainer
+        this.swiftContainer = new GenericContainer<>(SWIFT_DOCKER_IMAGE)
             .withExposedPorts(KEYSTONE_ADMIN_PORT)
             .withExposedPorts(SWIFT_PORT)
             .withLogConsumer(DockerSwiftContainer::displayDockerLog)
@@ -62,7 +61,6 @@ public class DockerSwiftContainer {
                         .withRateLimiter(RateLimiters.TWENTIES_PER_SECOND)
                 )
             );
-
     }
 
     public void start() {
@@ -129,7 +127,7 @@ public class DockerSwiftContainer {
     }
 
     private static void displayDockerLog(OutputFrame outputFrame) {
-        LOGGER.info(outputFrame.getUtf8String());
+        LOGGER.error(outputFrame.getUtf8String());
     }
 
 }

@@ -18,15 +18,16 @@
                         <pattern>%d{HH:mm:ss.SSS} [%-5level] %logger{15} - %msg%n%rEx</pattern>
                 </encoder>
                 <immediateFlush>false</immediateFlush>
-                <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+                <!--<filter class="ch.qos.logback.classic.filter.ThresholdFilter">
                         <level>ERROR</level>
-                </filter>
+                </filter>-->
         </appender>
 
         <root level="WARN">
                 <appender-ref ref="CONSOLE" />
                 <appender-ref ref="FILE" />
         </root>
-        <logger name="org.apache.james" level="DEBUG" />
+        <logger name="org.jclouds.rest.internal" level="DEBUG" />
+        <!--<logger name="org.apache.james" level="DEBUG" />-->
 
 </configuration>

@@ -22,12 +22,18 @@ package org.apache.james.blob.objectstorage;
 import java.io.IOException;
 import java.io.InputStream;
 
+import com.google.common.io.ByteSource;
+
 public interface PayloadCodec {
     Payload write(InputStream is);
+
+    Payload write(ByteSource byteSource) throws IOException;
 
     Payload write(byte[] bytes);
 
     InputStream read(Payload payload) throws IOException;
+
+    InputStream read(InputStream input) throws IOException;
 
     PayloadCodec DEFAULT_CODEC = new DefaultPayloadCodec();
 }

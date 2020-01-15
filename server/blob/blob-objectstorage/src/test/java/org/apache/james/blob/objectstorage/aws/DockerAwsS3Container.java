@@ -25,10 +25,11 @@ import org.apache.james.blob.objectstorage.DockerAwsS3;
 import org.apache.james.util.Host;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.images.builder.ImageFromDockerfile;
 
 public class DockerAwsS3Container {
 
-    private static final String AWS_S3_DOCKER_IMAGE = "linagora/cloudserver:mem-8.1.17";
+    private static final String AWS_S3_DOCKER_IMAGE = "zenko/cloudserver:8.2.3";
     private static final int AWS_S3_PORT = 8000;
     private static final int ONE_TIME = 1;
 

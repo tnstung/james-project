@@ -26,10 +26,17 @@ import java.util.Optional;
 
 import org.jclouds.io.Payloads;
 
+import com.google.common.io.ByteSource;
+
 public class DefaultPayloadCodec implements PayloadCodec {
     @Override
     public Payload write(InputStream is) {
         return new Payload(Payloads.newInputStreamPayload(is), Optional.empty());
+    }
+
+    @Override
+    public Payload write(ByteSource byteSource) throws IOException {
+        return new Payload(Payloads.newByteSourcePayload(byteSource), Optional.of(byteSource.size()));
     }
 
     @Override
@@ -43,5 +50,10 @@ public class DefaultPayloadCodec implements PayloadCodec {
     @Override
     public InputStream read(Payload payload) throws IOException {
         return payload.getPayload().openStream();
+    }
+
+    @Override
+    public InputStream read(InputStream input) throws IOException {
+        return input;
     }
 }
