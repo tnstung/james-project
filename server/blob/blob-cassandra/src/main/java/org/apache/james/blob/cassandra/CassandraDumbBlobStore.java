@@ -184,13 +184,13 @@ public class CassandraDumbBlobStore implements DumbBlobStore {
     private Flux<ByteBuffer> readBlobParts(BucketName bucketName, BlobId blobId) {
         return selectRowCount(bucketName, blobId)
             .single()
-            .onErrorResume(NoSuchElementException.class, e -> Mono.error(
-                new ObjectNotFoundException(String.format("Could not retrieve blob metadata for %s", blobId))))
+            .onErrorMap(NoSuchElementException.class, e ->
+                new ObjectNotFoundException(String.format("Could not retrieve blob metadata for %s", blobId)))
             .flatMapMany(rowCount -> Flux.range(0, rowCount)
                 .concatMap(partIndex -> readPart(bucketName, blobId, partIndex)
-                        .single()
-                        .onErrorResume(NoSuchElementException.class, e -> Mono.error(
-                            new ObjectNotFoundException(String.format("Missing blob part for blobId %s and position %d", blobId.asString(), partIndex))))));
+                    .single()
+                    .onErrorMap(NoSuchElementException.class, e ->
+                        new ObjectNotFoundException(String.format("Missing blob part for blobId %s and position %d", blobId.asString(), partIndex)))));
     }
 
     private byte[] byteBuffersToBytesArray(List<ByteBuffer> byteBuffers) {
