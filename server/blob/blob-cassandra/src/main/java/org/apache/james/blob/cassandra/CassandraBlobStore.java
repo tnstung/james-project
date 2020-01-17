@@ -19,8 +19,6 @@
 
 package org.apache.james.blob.cassandra;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 
 import javax.inject.Inject;
@@ -34,6 +32,7 @@ import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.HashBlobId;
 
 import com.datastax.driver.core.Session;
+import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.hash.Hashing;
@@ -90,13 +89,7 @@ public class CassandraBlobStore implements BlobStore {
         return Mono.using(
             () -> new FileBackedOutputStream(FILE_THRESHOLD),
             fileBackedOutputStream -> saveAndGenerateBlobId(bucketName, hashingInputStream, fileBackedOutputStream),
-            fileBackedOutputStream -> {
-                try {
-                    fileBackedOutputStream.reset();
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            },
+            Throwing.consumer(FileBackedOutputStream::reset).sneakyThrow(),
             LAZY_RESSOURCE_CLEANUP);
     }
 
@@ -111,15 +104,13 @@ public class CassandraBlobStore implements BlobStore {
     @Override
     public Mono<byte[]> readBytes(BucketName bucketName, BlobId blobId) {
         Preconditions.checkNotNull(bucketName);
-        return retrieveStoredValue(bucketName, blobId);
+        return dumbBlobStore.readBytes(bucketName, blobId);
     }
 
     @Override
     public InputStream read(BucketName bucketName, BlobId blobId) {
         Preconditions.checkNotNull(bucketName);
-        return retrieveStoredValue(bucketName, blobId)
-            .map(ByteArrayInputStream::new)
-            .block();
+        return dumbBlobStore.read(bucketName, blobId);
     }
 
     @Override
@@ -127,10 +118,6 @@ public class CassandraBlobStore implements BlobStore {
         Preconditions.checkNotNull(bucketName);
 
         return dumbBlobStore.deleteBucket(bucketName);
-    }
-
-    private Mono<byte[]> retrieveStoredValue(BucketName bucketName, BlobId blobId) {
-        return dumbBlobStore.readBytes(bucketName, blobId);
     }
 
     @Override
