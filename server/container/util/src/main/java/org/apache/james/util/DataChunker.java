@@ -17,13 +17,12 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.blob.cassandra.utils;
+package org.apache.james.util;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
-import java.util.Arrays;
 
 import com.google.common.base.Preconditions;
 import reactor.core.publisher.Flux;
@@ -31,7 +30,7 @@ import reactor.core.publisher.Mono;
 
 public class DataChunker {
 
-    public Flux<ByteBuffer> chunk(byte[] data, int chunkSize) {
+    public static Flux<ByteBuffer> chunk(byte[] data, int chunkSize) {
         Preconditions.checkNotNull(data);
         Preconditions.checkArgument(chunkSize > 0, "ChunkSize can not be negative or 0");
 
@@ -44,14 +43,14 @@ public class DataChunker {
             lastChunk(data, chunkSize * fullChunkCount, fullChunkCount));
     }
 
-    private Mono<ByteBuffer> lastChunk(byte[] data, int offset, int index) {
+    private static Mono<ByteBuffer> lastChunk(byte[] data, int offset, int index) {
         if (offset == data.length && index > 0) {
             return Mono.empty();
         }
         return Mono.just(ByteBuffer.wrap(data, offset, data.length - offset));
     }
 
-    public Flux<ByteBuffer> chunkStream(InputStream data, int chunkSize) {
+    public static Flux<ByteBuffer> chunkStream(InputStream data, int chunkSize) {
         Preconditions.checkNotNull(data);
         Preconditions.checkArgument(chunkSize > 0, "ChunkSize can not be negative or 0");
         BufferedInputStream bufferedInputStream = new BufferedInputStream(data);
