@@ -6,45 +6,39 @@ services:
     depends_on:
       - elasticsearch
       - cassandra
-      - tika
       - rabbitmq
-      - swift
-    entrypoint: bash -c "java -Dworking.directory=/root/ -Dlogback.configurationFile=/root/conf/logback.xml -jar james-server.jar"
-    image: linagora/james-rabbitmq-project:latest
+    image: linagora/james-rabbitmq-project:branch-master
     container_name: james
     hostname: james.local
+    volumes:
+    - "/srv/bench-running-docker/james:/root/conf"
+    environment:
+      - GLOWROOT_ACTIVATED=TRUE
     ports:
-      - "80:80"
-      - "25:25"
-      - "110:110"
-      - "143:143"
-      - "465:465"
-      - "587:587"
-      - "993:993"
-      - "8000:8000"
+      - "172.24.64.65:80:80"
+      - "172.24.64.65:25:25"
+      - "172.24.64.65:110:110"
+      - "172.24.64.65:143:143"
+      - "172.24.64.65:465:465"
+      - "172.24.64.65:587:587"
+      - "172.24.64.65:993:993"
+      - "172.24.64.65:4000:4000"
+      - "172.24.64.65:8000:8000"
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:6.3.2
     environment:
       - discovery.type=single-node
 
+  grafana:
+    depends_on:
+      - elasticsearch
+    image: grafana/grafana
+    ports:
+      - "172.24.64.65:3000:3000"
+
   cassandra:
     image: cassandra:3.11.3
-    ports:
-      - "9042:9042"
-
-  tika:
-    image: linagora/docker-tikaserver:1.22
 
   rabbitmq:
     image: rabbitmq:3.8.1-management
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-
-  swift:
-    image: linagora/openstack-keystone-swift:pike
-    ports:
-      - "5000:5000"
-      - "8080:8080"
-      - "35357:35357"

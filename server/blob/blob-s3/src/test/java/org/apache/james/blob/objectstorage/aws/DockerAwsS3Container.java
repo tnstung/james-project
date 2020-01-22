@@ -33,6 +33,7 @@ public class DockerAwsS3Container {
 
     public static final String ACCESS_KEY_ID = "newAccessKey";
     public static final String SECRET_ACCESS_KEY = "newSecretKey";
+    public static final Region REGION = Region.of(software.amazon.awssdk.regions.Region.EU_WEST_1.id());
 
     private final GenericContainer<?> awsS3Container;
     private DockerAwsS3 dockerAwsS3;
@@ -51,7 +52,7 @@ public class DockerAwsS3Container {
     public void start() {
         awsS3Container.start();
 
-        dockerAwsS3 = new DockerAwsS3(URI.create("http://" + getHost().asString() + "/"));
+        dockerAwsS3 = new DockerAwsS3(URI.create("http://" + getHost().asString() + "/"), REGION);
     }
 
     public void stop() {

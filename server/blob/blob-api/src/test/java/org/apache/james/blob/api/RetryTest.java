@@ -17,31 +17,38 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.modules;
+package org.apache.james.blob.api;
 
-import org.apache.james.modules.blobstore.BlobStoreChoosingConfiguration;
-import org.apache.james.modules.objectstorage.aws.s3.DockerAwsS3TestRule;
+import java.time.Duration;
+import java.util.Random;
+import java.util.concurrent.atomic.AtomicInteger;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Module;
-import com.google.inject.util.Modules;
+import org.junit.jupiter.api.Test;
 
-public class TestAwsS3BlobStoreModule extends AbstractModule {
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
+import reactor.util.function.Tuples;
 
-    private final DockerAwsS3TestRule dockerAwsS3TestRule;
+public class RetryTest {
 
-    public TestAwsS3BlobStoreModule(DockerAwsS3TestRule awsS3TestRule) {
-        this.dockerAwsS3TestRule = awsS3TestRule;
+    @Test
+    void howDoesItWork() {
+        Flux.range(0, 2)
+            .log()
+            .doOnNext(System.out::println)
+            .flatMap(c -> Mono.fromCallable(() -> {
+                throw new IllegalStateException(String.valueOf(c));
+            }).log())
+            .retryWhen(errors ->  errors.index().flatMap(v -> Mono.fromCallable(() -> {
+                System.out.println("running Mono on thread " + Thread.currentThread().getName());
+                return v;
+            }))
+         //           .filter(v -> )
+            ) //errors.filter(throwable -> Integer.valueOf(throwable.getMessage()) == 5).doOnNext(System.out::println))
+            .doOnNext(System.out::println)
+            .subscribeOn(Schedulers.newElastic("pool-1"))
+            .blockLast(Duration.ofSeconds(10));
     }
 
-    @Override
-    protected void configure() {
-        Module testAwsS3BlobStoreModule = Modules
-            .override(dockerAwsS3TestRule.getModule())
-            .with(binder -> binder.bind(BlobStoreChoosingConfiguration.class)
-                    .toInstance(BlobStoreChoosingConfiguration.s3()));
-
-        install(testAwsS3BlobStoreModule);
-    }
 }
-

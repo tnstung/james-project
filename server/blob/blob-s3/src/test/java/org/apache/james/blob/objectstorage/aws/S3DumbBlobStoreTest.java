@@ -18,10 +18,8 @@
  ****************************************************************/
 package org.apache.james.blob.objectstorage.aws;
 
-import org.apache.james.blob.api.BlobStoreContract;
 import org.apache.james.blob.api.DumbBlobStore;
 import org.apache.james.blob.api.DumbBlobStoreContract;
-import org.apache.james.blob.api.ReadSaveDumbBlobStoreContract;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -40,7 +38,7 @@ public class S3DumbBlobStoreTest implements DumbBlobStoreContract {
             .secretKey(DockerAwsS3Container.SECRET_ACCESS_KEY)
             .build();
 
-        testee = new S3DumbBlobStore(configuration);
+        testee = new S3DumbBlobStore(configuration, DockerAwsS3Container.REGION);
     }
 
     @AfterEach

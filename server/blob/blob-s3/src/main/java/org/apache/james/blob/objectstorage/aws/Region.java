@@ -17,30 +17,24 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.modules;
+package org.apache.james.blob.objectstorage.aws;
 
-import org.apache.james.modules.blobstore.BlobStoreChoosingConfiguration;
-import org.apache.james.modules.objectstorage.swift.DockerSwiftTestRule;
+import com.google.common.base.Preconditions;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Module;
-import com.google.inject.util.Modules;
+public class Region {
 
-public class TestSwiftBlobStoreModule extends AbstractModule {
+    private final String region;
 
-    private final DockerSwiftTestRule dockerSwiftTestRule;
-
-    public TestSwiftBlobStoreModule() {
-        this.dockerSwiftTestRule = new DockerSwiftTestRule();
+    public static Region of(String region) {
+        Preconditions.checkNotNull(region);
+        return new Region(region);
     }
 
-    @Override
-    protected void configure() {
-        Module testSwiftBlobStoreModule = Modules
-            .override(dockerSwiftTestRule.getModule())
-            .with(binder -> binder.bind(BlobStoreChoosingConfiguration.class)
-                .toInstance(BlobStoreChoosingConfiguration.objectStorage()));
+    public Region(String region) {
+        this.region = region;
+    }
 
-        install(testSwiftBlobStoreModule);
+    public software.amazon.awssdk.regions.Region asAws() {
+        return software.amazon.awssdk.regions.Region.of(region);
     }
 }

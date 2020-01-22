@@ -22,10 +22,17 @@ package org.apache.james.blob.objectstorage.aws;
 import java.net.URI;
 
 public class DockerAwsS3 {
+    public final Region region;
     private final URI awsS3Endpoint;
 
-    public DockerAwsS3(URI awsS3Endpoint) {
+
+    public DockerAwsS3(URI awsS3Endpoint, Region region) {
         this.awsS3Endpoint = awsS3Endpoint;
+        this.region = region;
+    }
+
+    public Region region() {
+        return region;
     }
 
     public URI awsS3Endpoint() {

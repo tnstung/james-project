@@ -19,8 +19,6 @@
 
 package org.apache.james.blob.objectstorage.aws;
 
-import static software.amazon.awssdk.regions.Region.US_EAST_1;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -38,6 +36,8 @@ import org.apache.james.blob.api.IOObjectStoreException;
 import org.apache.james.blob.api.ObjectNotFoundException;
 import org.apache.james.util.DataChunker;
 import org.apache.james.util.ReactorUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Preconditions;
@@ -66,6 +66,7 @@ import software.amazon.awssdk.services.s3.model.ObjectIdentifier;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 public class S3DumbBlobStore implements DumbBlobStore {
+    private static final Logger LOGGER = LoggerFactory.getLogger(S3DumbBlobStore.class);
 
     private static final int MAX_RETRIES = 5;
     private static final Duration FIRST_BACK_OFF = Duration.ofMillis(100);
@@ -77,7 +78,7 @@ public class S3DumbBlobStore implements DumbBlobStore {
     private final S3AsyncClient client;
 
     @Inject
-    S3DumbBlobStore(AwsS3AuthConfiguration configuration) {
+    S3DumbBlobStore(AwsS3AuthConfiguration configuration, Region region) {
         client = S3AsyncClient.builder()
             .credentialsProvider(StaticCredentialsProvider.create(
                 AwsBasicCredentials.create(configuration.getAccessKeyId(), configuration.getSecretKey())))
@@ -86,7 +87,7 @@ public class S3DumbBlobStore implements DumbBlobStore {
                 .maxPendingConnectionAcquires(10_000)
                 .build())
             .endpointOverride(URI.create(configuration.getEndpoint()))
-            .region(US_EAST_1)
+            .region(region.asAws())
             .build();
     }
 
@@ -154,11 +155,12 @@ public class S3DumbBlobStore implements DumbBlobStore {
 
     @Override
     public Mono<Void> save(BucketName bucketName, BlobId blobId, byte[] data) {
+        AppContext appContext = new AppContext();
         return Mono.fromFuture(() ->
                 client.putObject(
                     builder -> builder.bucket(bucketName.asString()).key(blobId.asString()).contentLength((long) data.length),
                     AsyncRequestBody.fromBytes(data)))
-            .retryWhen(createBucketOnRetry(bucketName))
+            .retryWhen(createBucketOnRetry(bucketName, appContext))
             .then();
     }
 
@@ -196,29 +198,41 @@ public class S3DumbBlobStore implements DumbBlobStore {
             .onErrorMap(IOException.class, e -> new IOObjectStoreException("Error saving blob", e));
     }
 
+    static class AppContext {
+        Mono<Void> mayCreateBucket = Mono.empty();
+    }
+
     @Override
     public Mono<Void> save(BucketName bucketName, BlobId blobId, ByteSource content) {
+        AppContext appContext = new AppContext();
         return Mono.using(content::openStream,
             stream ->
-                Mono.fromFuture(() ->
+                Mono.defer(() -> appContext.mayCreateBucket.then())
+                    .flatMap(ignored -> Mono.fromFuture(() ->
                     client.putObject(
                         Throwing.<PutObjectRequest.Builder>consumer(builder -> builder.bucket(bucketName.asString()).contentLength(content.size()).key(blobId.asString())).sneakyThrow(),
                         AsyncRequestBody.fromPublisher(
                             DataChunker.chunkStream(stream, CHUNK_SIZE)
-                        ))),
+                        ))).subscribeOn(Schedulers.elastic())),
             Throwing.consumer(InputStream::close),
             LAZY)
-            .retryWhen(createBucketOnRetry(bucketName))
+            .retryWhen(createBucketOnRetry(bucketName, appContext))
+//            .onErrorResume(BucketAlreadyOwnedByYouException.class, e -> {
+//                LOGGER.debug("Already created bucket", e);
+//                return Mono.empty();
+//            })
             .onErrorMap(SdkClientException.class, e -> new IOObjectStoreException("Error saving blob", e))
             .then();
     }
 
-    private Retry<Object> createBucketOnRetry(BucketName bucketName) {
-        return Retry.onlyIf(retryContext -> retryContext.exception() instanceof NoSuchBucketException)
+    private Retry<AppContext> createBucketOnRetry(BucketName bucketName, AppContext appContext) {
+        return Retry.<AppContext>onlyIf(retryContext -> retryContext.exception() instanceof NoSuchBucketException)
             .exponentialBackoff(FIRST_BACK_OFF, FOREVER)
             .withBackoffScheduler(Schedulers.elastic())
+            .withApplicationContext(appContext)
+            .doOnRetry(context -> context.applicationContext().mayCreateBucket = Mono.fromFuture(() -> client.createBucket(builder -> builder.bucket(bucketName.asString()))).then())
             .retryMax(MAX_RETRIES)
-            .doOnRetry(retryContext -> Mono.fromFuture(client.createBucket(builder -> builder.bucket(bucketName.asString()))).block());
+            ;
     }
 
     @Override
