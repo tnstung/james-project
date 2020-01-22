@@ -217,10 +217,6 @@ public class S3DumbBlobStore implements DumbBlobStore {
             Throwing.consumer(InputStream::close),
             LAZY)
             .retryWhen(createBucketOnRetry(bucketName, appContext))
-//            .onErrorResume(BucketAlreadyOwnedByYouException.class, e -> {
-//                LOGGER.debug("Already created bucket", e);
-//                return Mono.empty();
-//            })
             .onErrorMap(SdkClientException.class, e -> new IOObjectStoreException("Error saving blob", e))
             .then();
     }

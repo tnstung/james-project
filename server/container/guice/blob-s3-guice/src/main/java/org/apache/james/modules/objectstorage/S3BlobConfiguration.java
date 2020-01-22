@@ -26,7 +26,6 @@ import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.objectstorage.aws.AwsS3AuthConfiguration;
-import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.modules.objectstorage.aws.s3.AwsS3ConfigurationReader;
 
 import com.google.common.annotations.VisibleForTesting;
