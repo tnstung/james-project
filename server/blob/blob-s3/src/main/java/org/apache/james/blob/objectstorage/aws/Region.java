@@ -19,9 +19,12 @@
 
 package org.apache.james.blob.objectstorage.aws;
 
+import java.util.Objects;
+
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 
-public class Region {
+public final class Region {
 
     private final String region;
 
@@ -30,11 +33,33 @@ public class Region {
         return new Region(region);
     }
 
-    public Region(String region) {
+    private Region(String region) {
         this.region = region;
     }
 
     public software.amazon.awssdk.regions.Region asAws() {
         return software.amazon.awssdk.regions.Region.of(region);
+    }
+
+
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof Region) {
+            Region that = (Region) o;
+            return Objects.equals(this.region, that.region);
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(region);
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("region", region)
+            .toString();
     }
 }

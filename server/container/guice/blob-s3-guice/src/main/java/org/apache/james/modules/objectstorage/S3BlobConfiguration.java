@@ -26,6 +26,7 @@ import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.objectstorage.aws.AwsS3AuthConfiguration;
+import org.apache.james.blob.objectstorage.aws.Region;
 import org.apache.james.modules.objectstorage.aws.s3.AwsS3ConfigurationReader;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -43,7 +44,8 @@ public class S3BlobConfiguration {
     public static S3BlobConfiguration from(Configuration configuration) throws ConfigurationException {
         Optional<String> namespace = Optional.ofNullable(configuration.getString(OBJECTSTORAGE_NAMESPACE, null));
         Optional<String> bucketPrefix = Optional.ofNullable(configuration.getString(OBJECTSTORAGE_BUCKET_PREFIX, null));
-        String region = Optional.ofNullable(configuration.getString(OBJECTSTORAGE_S3_REGION, null))
+        Region region = Optional.ofNullable(configuration.getString(OBJECTSTORAGE_S3_REGION, null))
+            .map(Region::of)
             .orElseThrow(() -> new ConfigurationException("require a region (" + OBJECTSTORAGE_S3_REGION + " key)"));
 
         return builder()
@@ -71,7 +73,7 @@ public class S3BlobConfiguration {
 
         @FunctionalInterface
         interface RequireRegion {
-            ReadyToBuild region(String region);
+            ReadyToBuild region(Region region);
         }
 
         class ReadyToBuild {
@@ -80,9 +82,9 @@ public class S3BlobConfiguration {
 
             private Optional<BucketName> defaultBucketName;
             private Optional<String> bucketPrefix;
-            private String region;
+            private Region region;
 
-            public ReadyToBuild(AwsS3AuthConfiguration specificAuthConfiguration, String region) {
+            public ReadyToBuild(AwsS3AuthConfiguration specificAuthConfiguration, Region region) {
                 this.specificAuthConfiguration = specificAuthConfiguration;
                 this.region = region;
                 this.defaultBucketName = Optional.empty();
@@ -110,20 +112,23 @@ public class S3BlobConfiguration {
             }
 
             public S3BlobConfiguration build() {
-                return new S3BlobConfiguration(bucketPrefix, defaultBucketName, specificAuthConfiguration);
+                return new S3BlobConfiguration(region, bucketPrefix, defaultBucketName, specificAuthConfiguration);
             }
         }
 
     }
 
     private final AwsS3AuthConfiguration specificAuthConfiguration;
-    private Optional<BucketName> namespace;
-    private Optional<String> bucketPrefix;
+    private final Region region;
+    private final Optional<BucketName> namespace;
+    private final Optional<String> bucketPrefix;
 
     @VisibleForTesting
-    S3BlobConfiguration(Optional<String> bucketPrefix,
+    S3BlobConfiguration(Region region,
+                        Optional<String> bucketPrefix,
                         Optional<BucketName> namespace,
                         AwsS3AuthConfiguration specificAuthConfiguration) {
+        this.region = region;
         this.bucketPrefix = bucketPrefix;
         this.namespace = namespace;
         this.specificAuthConfiguration = specificAuthConfiguration;
@@ -141,12 +146,17 @@ public class S3BlobConfiguration {
         return bucketPrefix;
     }
 
+    public Region region() {
+        return region;
+    }
+
     @Override
     public final boolean equals(Object o) {
         if (o instanceof S3BlobConfiguration) {
             S3BlobConfiguration that = (S3BlobConfiguration) o;
 
-            return Objects.equals(this.namespace, that.namespace)
+            return Objects.equals(this.region, that.region)
+                && Objects.equals(this.namespace, that.namespace)
                 && Objects.equals(this.bucketPrefix, that.bucketPrefix)
                 && Objects.equals(this.specificAuthConfiguration, that.specificAuthConfiguration);
         }
@@ -155,12 +165,13 @@ public class S3BlobConfiguration {
 
     @Override
     public final int hashCode() {
-        return Objects.hash(namespace, bucketPrefix, specificAuthConfiguration);
+        return Objects.hash(region, namespace, bucketPrefix, specificAuthConfiguration);
     }
 
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
+            .add("region", region)
             .add("namespace", namespace)
             .add("bucketPrefix", bucketPrefix)
             .add("specificAuthConfiguration", specificAuthConfiguration)

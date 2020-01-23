@@ -29,6 +29,7 @@ import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.objectstorage.aws.AwsS3AuthConfiguration;
+import org.apache.james.blob.objectstorage.aws.Region;
 import org.apache.james.modules.mailbox.ConfigurationComponent;
 import org.apache.james.utils.PropertiesProvider;
 
@@ -58,6 +59,12 @@ public class S3BlobStoreModule extends AbstractModule {
     @Singleton
     private AwsS3AuthConfiguration awsS3AuthConfiguration(S3BlobConfiguration s3BlobConfiguration) {
         return s3BlobConfiguration.getSpecificAuthConfiguration();
+    }
+
+    @Provides
+    @Singleton
+    private Region region(S3BlobConfiguration configuration) {
+        return configuration.region();
     }
 
     @Provides

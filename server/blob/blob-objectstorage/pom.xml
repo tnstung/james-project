@@ -89,6 +89,7 @@
         <dependency>
             <groupId>io.projectreactor.addons</groupId>
             <artifactId>reactor-extra</artifactId>
+            <version>3.3.3.BUILD-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.apache.jclouds.api</groupId>

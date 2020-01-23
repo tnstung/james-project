@@ -56,6 +56,7 @@ import software.amazon.awssdk.core.async.SdkPublisher;
 import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.http.nio.netty.NettyNioAsyncHttpClient;
 import software.amazon.awssdk.services.s3.S3AsyncClient;
+import software.amazon.awssdk.services.s3.model.BucketAlreadyOwnedByYouException;
 import software.amazon.awssdk.services.s3.model.CreateMultipartUploadResponse;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.services.s3.model.ListBucketsResponse;
@@ -207,13 +208,12 @@ public class S3DumbBlobStore implements DumbBlobStore {
         AppContext appContext = new AppContext();
         return Mono.using(content::openStream,
             stream ->
-                Mono.defer(() -> appContext.mayCreateBucket.then())
-                    .flatMap(ignored -> Mono.fromFuture(() ->
+                Mono.fromFuture(() ->
                     client.putObject(
                         Throwing.<PutObjectRequest.Builder>consumer(builder -> builder.bucket(bucketName.asString()).contentLength(content.size()).key(blobId.asString())).sneakyThrow(),
                         AsyncRequestBody.fromPublisher(
                             DataChunker.chunkStream(stream, CHUNK_SIZE)
-                        ))).subscribeOn(Schedulers.elastic())),
+                        ))),
             Throwing.consumer(InputStream::close),
             LAZY)
             .retryWhen(createBucketOnRetry(bucketName, appContext))
@@ -226,9 +226,9 @@ public class S3DumbBlobStore implements DumbBlobStore {
             .exponentialBackoff(FIRST_BACK_OFF, FOREVER)
             .withBackoffScheduler(Schedulers.elastic())
             .withApplicationContext(appContext)
-            .doOnRetry(context -> context.applicationContext().mayCreateBucket = Mono.fromFuture(() -> client.createBucket(builder -> builder.bucket(bucketName.asString()))).then())
-            .retryMax(MAX_RETRIES)
-            ;
+            .onRetryWithMono(context ->  Mono.fromFuture(() -> client.createBucket(builder -> builder.bucket(bucketName.asString())))
+                .onErrorResume(BucketAlreadyOwnedByYouException.class, e -> Mono.empty()))
+            .retryMax(MAX_RETRIES);
     }
 
     @Override
