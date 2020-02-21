@@ -23,7 +23,8 @@ advanced users.
  - [Solving cassandra inconsistencies](#Solving_cassandra_inconsistencies) 
  - [Setting Cassandra user permissions](#Setting_Cassandra_user_permissions)
  - [Cassandra table level configuration](#Cassandra_table_level_configuration) 
- 
+ - [Mail Queue](#Mail_Queue)
+
 ## Overall architecture
 
 Guice distributed James server intends to provide a horizontally scalable email server.
@@ -447,3 +448,36 @@ A review of your usage can be conducted using
 Table level options can be changed using **ALTER TABLE** for example with the 
 [cqlsh](https://cassandra.apache.org/doc/latest/tools/cqlsh.html) utility. A full compaction might be 
 needed in order for the changes to be taken into account.
+
+## Mail Queue
+
+An email queue is a mandatory component of SMTP servers. It is a system that creates an array of emails that are waiting to be processed for delivery. Email queuing is a form of Message Queuing – an asynchronous service-to-service communication. A message queue is meant to decouple a producing process from a consuming one. An email queue decouples the sender from the recipient. It allows them to communicate without being connected. As such, the queued emails wait for processing until the recipient is available to receive them. As James is an Email Server, it also supports mail queue as well.
+
+Sometimes you might need to check mail queue to make sure all emails are delivered properly. At first, you need to know why email queues get clogged. Here are the two core reasons for that:
+
+- Exceeded volume of emails
+- Spam-related issues
+
+### Browse Filtering
+
+In order to reduce delayed emails in mail queue, an adminstrator will adjust following properties in `rabbitmq.properties` based on periodical demand:
+
+- `mailqueue.view.sliceWindow`: Period of the window. Too large values will lead to wide rows while too little values might lead to many queries. Use the number of mail per Cassandra row, along with your expected traffic, to determine this value. This value can only be decreased to a value dividing the current value. Default value is 1h.
+
+- `mailqueue.view.bucketCount`: Use to distribute the emails of a given slice within your cassandra cluster. A good value is 2*`cassandraNodeCount`. This parameter can only be increased. Default value is 1.
+
+- `mailqueue.view.updateBrowseStartPace`: Determine the probability to update the browse start pointer. Too little value will lead to unnecessary reads. Too big value will lead to more expensive browse. Choose this parameter so that it get's update one time every one-two sliceWindow. Default value is 1000.
+
+- `mailqueue.size.metricsEnabled`: Enables or disables the gauge metric on the mail queue size. Computing the size of the mail queue is currently implemented on top of browse operation and thus have a linear complexity. Metrics get exported periodically as configured in elasticsearch.properties, thus getSize is also called periodically. Choose to disable it when the mail queue size is getting too big. Note that this is as well a temporary workaround until we get 'getSize' method better optimized. Default value is true.
+
+### Managing email queues
+
+Managing an email queue is an easy task if you follow following procedures:
+
+- First, [List mail queues](manage-webadmin.html#Listing_mail_queues) and [get a mail queue details](manage-webadmin.html#Getting_a_mail_queue_details).
+- And then [List the mails of a mail queue](manage-webadmin.html#Listing_the_mails_of_a_mail_queue).
+- If all mails in the mail queue are needed to be delivered you will [flush mails from a mail queue](manage-webadmin.html#Flushing_mails_from_a_mail_queue).
+
+In case, you need to clear a email queue because there are all spam or trash emails in the email queue you have this procedure to follow:
+
+- All mails from the given mail queue will be deleted with [Clearing a mail queue](manage-webadmin.html#Clearing_a_mail_queue).
