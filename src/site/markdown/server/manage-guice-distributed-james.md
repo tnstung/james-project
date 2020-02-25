@@ -453,6 +453,8 @@ needed in order for the changes to be taken into account.
 
 An email queue is a mandatory component of SMTP servers. It is a system that creates a queue of emails that are waiting to be processed for delivery. Email queuing is a form of Message Queuing – an asynchronous service-to-service communication. A message queue is meant to decouple a producing process from a consuming one. An email queue decouples the sender from the recipient. It allows them to communicate without being connected. As such, the queued emails wait for processing until the recipient is available to receive them. As James is an Email Server, it also supports mail queue as well.
 
+### Why Mail Queue is neccesary
+
 You might often need to check mail queue to make sure all emails are delivered properly. At first, you need to know why email queues get clogged. Here are the two core reasons for that:
 
 - Exceeded volume of emails
@@ -463,7 +465,7 @@ Some mailbox providers enforce email rate limits on IP addresses. The limits are
 
 Another common reason is that your email has been busted by spam filters. The filters will let the emails gradually pass to analyze how the rest of the recipients react to the message. If there is slow progress, it’s okay. Your email campaign is being observed and assessed. If it’s stuck, there could be different reasons including the blockage of your IP address. 
 
-## Why combining Cassandra, RabbitMQ and Object storage for MailQueue
+### Why combining Cassandra, RabbitMQ and Object storage for MailQueue
 
  - RabbitMQ ensures the messaging function, and avoids polling.
  - Cassandra enables administrative operations such as browsing, deleting using a time series which might require fine performance tuning (see [Operating Casandra documentation](http://cassandra.apache.org/doc/latest/operating/index.html)).
