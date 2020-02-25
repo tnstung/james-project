@@ -451,24 +451,27 @@ needed in order for the changes to be taken into account.
 
 ## Mail Queue
 
-An email queue is a mandatory component of SMTP servers. It is a system that creates an array of emails that are waiting to be processed for delivery. Email queuing is a form of Message Queuing – an asynchronous service-to-service communication. A message queue is meant to decouple a producing process from a consuming one. An email queue decouples the sender from the recipient. It allows them to communicate without being connected. As such, the queued emails wait for processing until the recipient is available to receive them. As James is an Email Server, it also supports mail queue as well.
+An email queue is a mandatory component of SMTP servers. It is a system that creates a queue of emails that are waiting to be processed for delivery. Email queuing is a form of Message Queuing – an asynchronous service-to-service communication. A message queue is meant to decouple a producing process from a consuming one. An email queue decouples the sender from the recipient. It allows them to communicate without being connected. As such, the queued emails wait for processing until the recipient is available to receive them. As James is an Email Server, it also supports mail queue as well.
 
 Sometimes you might need to check mail queue to make sure all emails are delivered properly. At first, you need to know why email queues get clogged. Here are the two core reasons for that:
 
 - Exceeded volume of emails
+
+Some mailbox providers enforce email rate limits on IP addresses. The limits are based on the sender reputation. If you exceeded this rate and queued too many emails, the delivery speed will decrease.
+
 - Spam-related issues
 
-### Browse Filtering
+Another common reason is that your email has been busted by spam filters. The filters will let the emails gradually pass to analyze how the rest of the recipients react to the message. If there is slow progress, it’s okay. Your email campaign is being observed and assessed. If it’s stuck, there could be different reasons including the blockage of your IP address. 
 
-In order to reduce delayed emails in mail queue, an adminstrator will adjust following properties in `rabbitmq.properties` based on periodical demand:
+## Why combines Cassandra, RabbitMQ and Object storage for MailQueue
 
-- `mailqueue.view.sliceWindow`: Period of the window. Too large values will lead to wide rows while too little values might lead to many queries. Use the number of mail per Cassandra row, along with your expected traffic, to determine this value. This value can only be decreased to a value dividing the current value. Default value is 1h.
+ - RabbitMQ ensures the messaging function, and avoids polling.
+ - Cassandra enables administrative operations such as browsing, deleting using a time series which might require fine performance tuning (see [Operating Casandra documentation](http://cassandra.apache.org/doc/latest/operating/index.html)).
+ - Object Storage stores potentially large binary payload.
 
-- `mailqueue.view.bucketCount`: Use to distribute the emails of a given slice within your cassandra cluster. A good value is 2*`cassandraNodeCount`. This parameter can only be increased. Default value is 1.
+### Fine tune configuration for RabbitMQ
 
-- `mailqueue.view.updateBrowseStartPace`: Determine the probability to update the browse start pointer. Too little value will lead to unnecessary reads. Too big value will lead to more expensive browse. Choose this parameter so that it get's update one time every one-two sliceWindow. Default value is 1000.
-
-- `mailqueue.size.metricsEnabled`: Enables or disables the gauge metric on the mail queue size. Computing the size of the mail queue is currently implemented on top of browse operation and thus have a linear complexity. Metrics get exported periodically as configured in elasticsearch.properties, thus getSize is also called periodically. Choose to disable it when the mail queue size is getting too big. Note that this is as well a temporary workaround until we get 'getSize' method better optimized. Default value is true.
+In order to reduce delayed emails in mail queue, an adminstrator will adjust following properties in [rabbitmq.properties](https://github.com/apache/james-project/blob/master/src/site/xdoc/server/config-rabbitmq.xml) based on periodical demand.
 
 ### Managing email queues
 
