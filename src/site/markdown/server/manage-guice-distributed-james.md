@@ -463,7 +463,7 @@ Some mailbox providers enforce email rate limits on IP addresses. The limits are
 
 Another common reason is that your email has been busted by spam filters. The filters will let the emails gradually pass to analyze how the rest of the recipients react to the message. If there is slow progress, it’s okay. Your email campaign is being observed and assessed. If it’s stuck, there could be different reasons including the blockage of your IP address. 
 
-## Why combines Cassandra, RabbitMQ and Object storage for MailQueue
+## Why combining Cassandra, RabbitMQ and Object storage for MailQueue
 
  - RabbitMQ ensures the messaging function, and avoids polling.
  - Cassandra enables administrative operations such as browsing, deleting using a time series which might require fine performance tuning (see [Operating Casandra documentation](http://cassandra.apache.org/doc/latest/operating/index.html)).
