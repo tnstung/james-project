@@ -475,7 +475,7 @@ In order to reduce delayed emails in mail queue, an adminstrator will adjust fol
 
 ### Managing email queues
 
-Managing an email queue is an easy task if you follow following procedures:
+Managing an email queue is an easy task if you follow this procedure:
 
 - First, [List mail queues](manage-webadmin.html#Listing_mail_queues) and [get a mail queue details](manage-webadmin.html#Getting_a_mail_queue_details).
 - And then [List the mails of a mail queue](manage-webadmin.html#Listing_the_mails_of_a_mail_queue).
