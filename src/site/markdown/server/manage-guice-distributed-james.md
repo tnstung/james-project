@@ -483,6 +483,6 @@ Managing an email queue is an easy task if you follow this procedure:
 - And then [List the mails of a mail queue](manage-webadmin.html#Listing_the_mails_of_a_mail_queue).
 - If all mails in the mail queue are needed to be delivered you will [flush mails from a mail queue](manage-webadmin.html#Flushing_mails_from_a_mail_queue).
 
-In case, you need to clear an email queue because there are all spam or trash emails in the email queue you have this procedure to follow:
+In case, you need to clear an email queue because there are only spam or trash emails in the email queue you have this procedure to follow:
 
 - All mails from the given mail queue will be deleted with [Clearing a mail queue](manage-webadmin.html#Clearing_a_mail_queue).
