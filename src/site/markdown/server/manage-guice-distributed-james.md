@@ -473,7 +473,7 @@ Another common reason is that your email has been busted by spam filters. The fi
 
 ### Fine tune configuration for RabbitMQ
 
-In order to reduce delayed emails in mail queue, an adminstrator will adjust following properties in [rabbitmq.properties](https://github.com/apache/james-project/blob/master/src/site/xdoc/server/config-rabbitmq.xml) based on periodical demand.
+In order to reduce delayed emails in mail queue, an administrator will adjust the following properties in [rabbitmq.properties](https://github.com/apache/james-project/blob/master/src/site/xdoc/server/config-rabbitmq.xml) corresponding to situational conditions.
 
 ### Managing email queues
 
@@ -483,6 +483,6 @@ Managing an email queue is an easy task if you follow this procedure:
 - And then [List the mails of a mail queue](manage-webadmin.html#Listing_the_mails_of_a_mail_queue).
 - If all mails in the mail queue are needed to be delivered you will [flush mails from a mail queue](manage-webadmin.html#Flushing_mails_from_a_mail_queue).
 
-In case, you need to clear a email queue because there are all spam or trash emails in the email queue you have this procedure to follow:
+In case, you need to clear an email queue because there are all spam or trash emails in the email queue you have this procedure to follow:
 
 - All mails from the given mail queue will be deleted with [Clearing a mail queue](manage-webadmin.html#Clearing_a_mail_queue).
