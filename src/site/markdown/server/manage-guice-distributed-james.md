@@ -473,7 +473,7 @@ Another common reason is that your email has been busted by spam filters. The fi
 
 ### Fine tune configuration for RabbitMQ
 
-In order to reduce delayed emails in mail queue, an administrator will adjust the following properties in [rabbitmq.properties](https://github.com/apache/james-project/blob/master/src/site/xdoc/server/config-rabbitmq.xml) corresponding to situational conditions.
+In order to adapt mail queue settings to the actual traffic load, an administrator needs to perform fine configuration tunning as explained in [rabbitmq.properties](https://github.com/apache/james-project/blob/master/src/site/xdoc/server/config-rabbitmq.xml).
 
 ### Managing email queues
 
