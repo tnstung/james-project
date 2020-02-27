@@ -471,9 +471,14 @@ Another common reason is that your email has been busted by spam filters. The fi
  - Cassandra enables administrative operations such as browsing, deleting using a time series which might require fine performance tuning (see [Operating Casandra documentation](http://cassandra.apache.org/doc/latest/operating/index.html)).
  - Object Storage stores potentially large binary payload.
 
+However the current design do not implement delays.
+
 ### Fine tune configuration for RabbitMQ
 
 In order to adapt mail queue settings to the actual traffic load, an administrator needs to perform fine configuration tunning as explained in [rabbitmq.properties](https://github.com/apache/james-project/blob/master/src/site/xdoc/server/config-rabbitmq.xml).
+
+Be aware that `MailQueue::getSize` is currently performing a browse and thus is expensive. Size recurring metric 
+reporting thus introduces performance issues. As such, we advise setting `mailqueue.size.metricsEnabled=false`.
 
 ### Managing email queues
 
