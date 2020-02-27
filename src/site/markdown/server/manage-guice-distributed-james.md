@@ -471,7 +471,9 @@ Another common reason is that your email has been busted by spam filters. The fi
  - Cassandra enables administrative operations such as browsing, deleting using a time series which might require fine performance tuning (see [Operating Casandra documentation](http://cassandra.apache.org/doc/latest/operating/index.html)).
  - Object Storage stores potentially large binary payload.
 
-However the current design do not implement delays.
+However the current design do not implement delays. Delays allow to define the time a mail have to be living in the 
+mailqueue before being dequeued and is used for example for exponential wait delays upon remote delivery retries, or
+SMTP traffic rate limiting.
 
 ### Fine tune configuration for RabbitMQ
 
